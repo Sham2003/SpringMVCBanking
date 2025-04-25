@@ -31,14 +31,6 @@ public class User {
 
     private int failedLoginAttempts;
     private LocalDateTime accountLockedUntil;
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
 
 
 }

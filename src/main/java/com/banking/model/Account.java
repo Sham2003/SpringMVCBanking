@@ -26,7 +26,4 @@ public class Account {
     private String otp;
     private Double balance = 0.0;
     private LocalDateTime createdOn = LocalDateTime.now();
-
-
-
 }

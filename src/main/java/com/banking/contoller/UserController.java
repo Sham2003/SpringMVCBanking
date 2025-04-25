@@ -42,89 +42,6 @@ public class UserController {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @GetMapping("/")
-    public String showHomePage() {
-        return "index";
-    }
-
-    @GetMapping("/create-account")
-    public String showCreateAccountForm() {
-        return "create-account";
-    }
-
-    @PostMapping("/create-account")
-    public String createAccount(@RequestParam String name,
-                            @RequestParam String email,
-                            @RequestParam String mobileNumber,
-                            @RequestParam String dob,
-                            @RequestParam String accountType,
-                            @RequestParam String password,
-                            @RequestParam String confirmPassword, // Added confirm password check
-                            Model model) {
-
-    // Check if the email already exists for an account
-    if (accountRepository.findByEmail(email) != null) {
-        model.addAttribute("message", "Account already exists for this email.");
-        return "create-account";
-    }
-
-    // Validate password and confirm password match
-    if (!password.equals(confirmPassword)) {
-        model.addAttribute("message", "Passwords do not match.");
-        return "create-account";
-    }
-
-    // Validate password strength
-    if (!isValidPassword(password)) {
-        model.addAttribute("message", "Password must be at least 6 characters long, contain one uppercase letter, one lowercase letter, one digit, and one special character.");
-        return "create-account";
-    }
-
-    // Check if the user already exists
-    if (userService.findByEmail(email) == null) {
-        User newUser = new User();
-        newUser.setEmail(email);
-        newUser.setPassword(password);
-        newUser.setName(name);
-        userService.saveUser(newUser);
-    }
-
-    // Validate age (must be at least 18)
-    LocalDate dateOfBirth = LocalDate.parse(dob);
-    LocalDate today = LocalDate.now();
-    int age = today.getYear() - dateOfBirth.getYear();
-    if (dateOfBirth.plusYears(age).isAfter(today)) age--;
-
-    if (age < 18) {
-        model.addAttribute("message", "You must be at least 18 years old to create an account.");
-        return "create-account";
-    }
-
-    // Generate a random account number
-    String accountNumber = "ACC" + String.format("%010d", new Random().nextInt(1_000_000_000));
-    
-    // Create and save the new account
-    Account account = new Account();
-    account.setName(name);
-    account.setEmail(email);
-    account.setMobileNumber(mobileNumber);
-    account.setDob(dateOfBirth);
-    account.setAccountType(accountType);
-    account.setAccountNumber(accountNumber);
-    account.setBalance(0.0);
-
-    accountRepository.save(account);
-
-    // Redirect to the success page with the account number
-    return "redirect:/success?accountNumber=" + accountNumber;
-}
-
-// Password validation function
-private boolean isValidPassword(String password) {
-    String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z\\d]).{6,}$";
-    return password != null && password.matches(pattern);
-}
-
 
 
     // ------------------- SUCCESS PAGE -------------------
@@ -143,56 +60,7 @@ private boolean isValidPassword(String password) {
         return "login";
     }
 
-    @PostMapping("/login")
-    public String loginUser(@ModelAttribute("user") User user, Model model) {
-        User existingUser = userService.findByEmail(user.getEmail());
 
-        if (existingUser == null) {
-            model.addAttribute("message", "Invalid email or password!");
-            return "login";
-        }
-
-        if (accountRepository.findByEmail(user.getEmail()) == null) {
-            model.addAttribute("message", "No account exists for this user. Please create an account first.");
-            return "login";
-        }
-
-        if (existingUser.getAccountLockedUntil() != null &&
-                existingUser.getAccountLockedUntil().isAfter(LocalDateTime.now())) {
-            model.addAttribute("message", "Account is locked. Try again after: " + existingUser.getAccountLockedUntil());
-            return "login";
-        }
-
-        if (!existingUser.getPassword().equals(user.getPassword())) {
-            int attempts = existingUser.getFailedLoginAttempts() + 1;
-            existingUser.setFailedLoginAttempts(attempts);
-
-            if (attempts >= 3) {
-                LocalDateTime lockUntil = LocalDateTime.now().plusMinutes(3);
-                existingUser.setAccountLockedUntil(lockUntil);
-                userService.saveUser(existingUser);
-
-                try {
-                    userService.sendAccountLockedEmail(existingUser.getEmail(), lockUntil);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                model.addAttribute("message", "Account locked due to 3 failed attempts. Try again after: " + lockUntil);
-                return "login";
-            }
-
-            userService.saveUser(existingUser);
-            model.addAttribute("message", "Invalid credentials! Attempt " + attempts + " of 3.");
-            return "login";
-        }
-
-        existingUser.setFailedLoginAttempts(0);
-        existingUser.setAccountLockedUntil(null);
-        userService.saveUser(existingUser);
-
-        return "redirect:/dashboard?email=" + existingUser.getEmail();
-    }
 
     @GetMapping("/dashboard")
     public String showDashboard(@RequestParam("email") String email, Model model) {
@@ -249,29 +117,7 @@ private boolean isValidPassword(String password) {
         return "reset-password";
     }
 
-    @PostMapping("/reset-password")
-    public String resetPassword(@RequestParam("email") String email,
-                                @RequestParam("newPassword") String newPassword,
-                                @RequestParam("confirmPassword") String confirmPassword,
-                                Model model) {
-        if (!newPassword.equals(confirmPassword)) {
-            model.addAttribute("message", "Passwords do not match!");
-            return "reset-password";
-        }
 
-        if (!isValidPassword(newPassword)) {
-            model.addAttribute("message", "Password must be strong (8+ chars, upper, lower, digit, special).");
-            return "reset-password";
-        }
-
-        User user = userService.findByEmail(email);
-        user.setPassword(newPassword);
-        user.setOtp(null);
-        userService.saveUser(user);
-
-        model.addAttribute("message", "Password reset successful.");
-        return "login";
-    }
 
     @PostMapping("/view-account")
     public String viewAccountDetails(@RequestParam("email") String email, Model model) {

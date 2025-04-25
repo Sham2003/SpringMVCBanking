@@ -2,102 +2,140 @@ package com.banking.contoller;
 
 import com.banking.model.User;
 import com.banking.model.Account;
+import com.banking.model.Transaction;
 import com.banking.repository.AccountRepository;
+import com.banking.repository.TransactionRepository;
+import com.banking.service.AccountService;
+import com.banking.service.TransactionService;
 import com.banking.service.UserService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.List;
 import java.util.Random;
-import java.util.regex.Pattern;
 
 @Controller
 public class UserController {
+
+    @Autowired
+    private TransactionService transactionService;
 
     @Autowired
     private UserService userService;
 
     @Autowired
     private AccountRepository accountRepository;
+    
+    @Autowired
+    private AccountService accountService;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    private boolean isValidPassword(String password) {
-        String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z\\d]).{8,}$";
-        return Pattern.matches(pattern, password);
+    @GetMapping("/")
+    public String showHomePage() {
+        return "index";
     }
 
-    // ------------------- REGISTER -------------------
-
-    @GetMapping("/register")
-    public String showRegistrationForm(Model model) {
-        model.addAttribute("user", new User());
-        return "register";
+    @GetMapping("/create-account")
+    public String showCreateAccountForm() {
+        return "create-account";
     }
 
-    @PostMapping("/register")
-    public String startRegistration(@ModelAttribute("user") User user,
-                                    @RequestParam("confirmPassword") String confirmPassword,
-                                    Model model) {
+    @PostMapping("/create-account")
+    public String createAccount(@RequestParam String name,
+                            @RequestParam String email,
+                            @RequestParam String mobileNumber,
+                            @RequestParam String dob,
+                            @RequestParam String accountType,
+                            @RequestParam String password,
+                            @RequestParam String confirmPassword, // Added confirm password check
+                            Model model) {
 
-        if (userService.findByEmail(user.getEmail()) != null) {
-            model.addAttribute("message", "Email already exists!");
-            return "register";
-        }
-
-        if (!user.getPassword().equals(confirmPassword)) {
-            model.addAttribute("message", "Passwords do not match!");
-            return "register";
-        }
-
-        if (!isValidPassword(user.getPassword())) {
-            model.addAttribute("message", "Password must be at least 8 characters long and contain at least one uppercase, lowercase, digit, and special character.");
-            return "register";
-        }
-
-        String otp = String.format("%06d", new Random().nextInt(999999));
-        user.setOtp(otp);
-        userService.saveUser(user);
-
-        try {
-            userService.sendOtpEmail(user.getEmail(), otp);
-        } catch (Exception e) {
-            e.printStackTrace();
-            model.addAttribute("message", "Failed to send email.");
-            return "verify-registration-otp";
-        }
-        System.out.println("Redirecting to otp page" + user.getOtp());
-        model.addAttribute("email", user.getEmail());
-        return "verify-registration-otp";
+    // Check if the email already exists for an account
+    if (accountRepository.findByEmail(email) != null) {
+        model.addAttribute("message", "Account already exists for this email.");
+        return "create-account";
     }
 
-    @PostMapping("/verify-registration-otp")
-    public String verifyRegistrationOtp(@RequestParam("email") String email,
-                                        @RequestParam("otp") String otp,
-                                        Model model) {
-        User pendingUser = userService.findByEmail(email);
-        if (pendingUser == null || !otp.equals(pendingUser.getOtp())) {
-            model.addAttribute("message", "Invalid OTP.");
-            return "verify-registration-otp";
-        }
-
-        pendingUser.setOtp(null);
-        userService.saveUser(pendingUser);
-        userService.removePendingUser(email);
-
-        model.addAttribute("message", "Registration successful. Please login.");
-        return "login";
+    // Validate password and confirm password match
+    if (!password.equals(confirmPassword)) {
+        model.addAttribute("message", "Passwords do not match.");
+        return "create-account";
     }
 
-    // ------------------- LOGIN -------------------
+    // Validate password strength
+    if (!isValidPassword(password)) {
+        model.addAttribute("message", "Password must be at least 6 characters long, contain one uppercase letter, one lowercase letter, one digit, and one special character.");
+        return "create-account";
+    }
+
+    // Check if the user already exists
+    if (userService.findByEmail(email) == null) {
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setPassword(password);
+        newUser.setName(name);
+        userService.saveUser(newUser);
+    }
+
+    // Validate age (must be at least 18)
+    LocalDate dateOfBirth = LocalDate.parse(dob);
+    LocalDate today = LocalDate.now();
+    int age = today.getYear() - dateOfBirth.getYear();
+    if (dateOfBirth.plusYears(age).isAfter(today)) age--;
+
+    if (age < 18) {
+        model.addAttribute("message", "You must be at least 18 years old to create an account.");
+        return "create-account";
+    }
+
+    // Generate a random account number
+    String accountNumber = "ACC" + String.format("%010d", new Random().nextInt(1_000_000_000));
+    
+    // Create and save the new account
+    Account account = new Account();
+    account.setName(name);
+    account.setEmail(email);
+    account.setMobileNumber(mobileNumber);
+    account.setDob(dateOfBirth);
+    account.setAccountType(accountType);
+    account.setAccountNumber(accountNumber);
+    account.setBalance(0.0);
+
+    accountRepository.save(account);
+
+    // Redirect to the success page with the account number
+    return "redirect:/success?accountNumber=" + accountNumber;
+}
+
+// Password validation function
+private boolean isValidPassword(String password) {
+    String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z\\d]).{6,}$";
+    return password != null && password.matches(pattern);
+}
+
+
+
+    // ------------------- SUCCESS PAGE -------------------
+
+    @GetMapping("/success")
+    public String showSuccessPage(@RequestParam String accountNumber, Model model) {
+        model.addAttribute("accountNumber", accountNumber);
+        return "success";
+    }
+
+
 
     @GetMapping("/login")
     public String showLoginForm(Model model) {
@@ -111,6 +149,11 @@ public class UserController {
 
         if (existingUser == null) {
             model.addAttribute("message", "Invalid email or password!");
+            return "login";
+        }
+
+        if (accountRepository.findByEmail(user.getEmail()) == null) {
+            model.addAttribute("message", "No account exists for this user. Please create an account first.");
             return "login";
         }
 
@@ -151,8 +194,6 @@ public class UserController {
         return "redirect:/dashboard?email=" + existingUser.getEmail();
     }
 
-    // ------------------- DASHBOARD -------------------
-
     @GetMapping("/dashboard")
     public String showDashboard(@RequestParam("email") String email, Model model) {
         User user = userService.findByEmail(email);
@@ -165,8 +206,6 @@ public class UserController {
         model.addAttribute("email", user.getEmail());
         return "dashboard";
     }
-
-    // ------------------- FORGOT PASSWORD -------------------
 
     @GetMapping("/forgot-password")
     public String showForgotPasswordForm() {
@@ -188,7 +227,6 @@ public class UserController {
         try {
             userService.sendOtpEmail(user.getEmail(), otp);
         } catch (Exception e) {
-            e.printStackTrace();
             model.addAttribute("message", "Failed to send email.");
             return "forgot-password";
         }
@@ -235,72 +273,12 @@ public class UserController {
         return "login";
     }
 
-    // ------------------- CREATE ACCOUNT -------------------
-
-    @GetMapping("/create-account")
-    public String showCreateAccountForm() {
-        return "create-account";
-    }
-
-    @PostMapping("/create-account")
-    public String createAccount(@RequestParam String name,
-                                @RequestParam String email,
-                                @RequestParam String mobileNumber,
-                                @RequestParam String dob,
-                                @RequestParam String accountType,
-                                Model model) {
-
-        User user = userService.findByEmail(email);
-        if (user == null) {
-            model.addAttribute("message", "No registered user found with this email. Please register first.");
-            return "create-account";
-        }
-
-        if (accountRepository.findByEmail(email) != null) {
-            model.addAttribute("message", "Account already exists for this email.");
-            return "create-account";
-        }
-
-        LocalDate dateOfBirth = LocalDate.parse(dob);
-        LocalDate today = LocalDate.now();
-        int age = today.getYear() - dateOfBirth.getYear();
-        if (dateOfBirth.plusYears(age).isAfter(today)) age--;
-
-        if (age < 18) {
-            model.addAttribute("message", "You must be at least 18 years old to create an account.");
-            return "create-account";
-        }
-
-        String accountNumber = "ACC" + String.format("%010d", new Random().nextInt(1_000_000_000));
-        Account account = new Account();
-        account.setName(name);
-        account.setEmail(email);
-        account.setMobileNumber(mobileNumber);
-        account.setDob(dateOfBirth);
-        account.setAccountType(accountType);
-        account.setAccountNumber(accountNumber);
-        account.setBalance(0.0);
-
-        accountRepository.save(account);
-
-        model.addAttribute("accountNumber", accountNumber);
-        return "success";
-    }
-
-    // ------------------- VIEW ACCOUNT -------------------
-
     @PostMapping("/view-account")
     public String viewAccountDetails(@RequestParam("email") String email, Model model) {
-        if (email == null || email.trim().isEmpty()) {
-            model.addAttribute("message", "Email is required to view account details.");
-            return "dashboard";
-        }
-
         String jpql = "SELECT u, a FROM User u LEFT JOIN Account a ON u.email = a.email WHERE u.email = :email";
-        Query query = entityManager.createQuery(jpql);
-        query.setParameter("email", email);
-
-        List<Object[]> results = query.getResultList();
+        List<Object[]> results = entityManager.createQuery(jpql, Object[].class)
+                                              .setParameter("email", email)
+                                              .getResultList();
 
         if (results.isEmpty()) {
             model.addAttribute("message", "User not found.");
@@ -311,16 +289,10 @@ public class UserController {
         User user = (User) result[0];
         Account account = (Account) result[1];
 
-        if (account == null) {
-            model.addAttribute("message", "No account exists for this user.");
-        }
-
         model.addAttribute("user", user);
         model.addAttribute("account", account);
         return "view-account";
     }
-
-    // ------------------- BANK TRANSFER -------------------
 
     @GetMapping("/banktransfer")
     public String showTransactionForm() {
@@ -328,46 +300,43 @@ public class UserController {
     }
 
     @PostMapping("/banktransfer")
-    public String processTransaction(@RequestParam String senderAccountNumber,
-                                     @RequestParam String receiverAccountNumber,
-                                     @RequestParam double amount,
-                                     Model model) {
+public String processTransaction(@RequestParam String senderAccountNumber,
+                                 @RequestParam String receiverAccountNumber,
+                                 @RequestParam double amount,
+                                 Model model) {
 
-        Account senderAccount = accountRepository.findByAccountNumber(senderAccountNumber);
-        Account receiverAccount = accountRepository.findByAccountNumber(receiverAccountNumber);
+    Account senderAccount = accountRepository.findByAccountNumber(senderAccountNumber);
+    Account receiverAccount = accountRepository.findByAccountNumber(receiverAccountNumber);
 
-        if (receiverAccount == null) {
-            model.addAttribute("message", "Receiver account not found.");
-            return "banktransfer";
-        }
-
-        if (senderAccount == null) {
-            model.addAttribute("message", "Sender account not found.");
-            return "banktransfer";
-        }
-
-        if (amount <= 0) {
-            model.addAttribute("message", "Amount must be greater than 0.");
-            return "banktransfer";
-        }
-
-        if (senderAccount.getBalance() < amount) {
-            model.addAttribute("message", "Insufficient balance.");
-            return "banktransfer";
-        }
-
-        senderAccount.setBalance(senderAccount.getBalance() - amount);
-        receiverAccount.setBalance(receiverAccount.getBalance() + amount);
-
-        accountRepository.save(senderAccount);
-        accountRepository.save(receiverAccount);
-
-        model.addAttribute("message", "Transaction successful!");
-        model.addAttribute("senderBalance", senderAccount.getBalance());
+    if (receiverAccount == null || senderAccount == null) {
+        model.addAttribute("message", "Sender or Receiver account not found.");
         return "banktransfer";
     }
 
-    // ------------------- DEPOSIT / WITHDRAW -------------------
+    if (amount <= 0) {
+        model.addAttribute("message", "Amount must be greater than 0.");
+        return "banktransfer";
+    }
+
+    if (senderAccount.getBalance() < amount) {
+        model.addAttribute("message", "Insufficient balance.");
+        return "banktransfer";
+    }
+
+    senderAccount.setBalance(senderAccount.getBalance() - amount);
+    receiverAccount.setBalance(receiverAccount.getBalance() + amount);
+
+    accountRepository.save(senderAccount);
+    accountRepository.save(receiverAccount);
+
+    // Save transaction records for both sender and receiver
+    transactionService.saveTransaction(senderAccountNumber, "transfer", amount, "Transferred to " + receiverAccountNumber);
+    transactionService.saveTransaction(receiverAccountNumber, "transfer", amount, "Received from " + senderAccountNumber);
+
+    model.addAttribute("message", "Transaction successful!");
+    model.addAttribute("senderBalance", senderAccount.getBalance());
+    return "banktransfer";
+}
 
     @GetMapping("/DepoWithdraw")
     public String showDepositWithdrawForm() {
@@ -375,38 +344,54 @@ public class UserController {
     }
 
     @PostMapping("/DepoWithdraw")
-    public String processDepositWithdraw(@RequestParam String accountNumber,
-                                         @RequestParam String transactionType,
-                                         @RequestParam double amount,
-                                         Model model) {
+public String processDepositWithdraw(@RequestParam String accountNumber,
+                                     @RequestParam String transactionType,
+                                     @RequestParam double amount,
+                                     Model model) {
 
-        Account account = accountRepository.findByAccountNumber(accountNumber);
+    Account account = accountRepository.findByAccountNumber(accountNumber);
 
-        if (account == null) {
-            model.addAttribute("error", "Account not found.");
-            return "DepoWithdraw";
-        }
-
-        if (amount <= 0) {
-            model.addAttribute("error", "Amount must be greater than 0.");
-            return "DepoWithdraw";
-        }
-
-        if ("deposit".equals(transactionType)) {
-            account.setBalance(account.getBalance() + amount);
-        } else if ("withdraw".equals(transactionType)) {
-            if (account.getBalance() < amount) {
-                model.addAttribute("error", "Insufficient balance.");
-                return "DepoWithdraw";
-            }
-            account.setBalance(account.getBalance() - amount);
-        } else {
-            model.addAttribute("error", "Invalid transaction type.");
-            return "DepoWithdraw";
-        }
-
-        accountRepository.save(account);
-        model.addAttribute("message", "Transaction successful! New Balance: " + account.getBalance());
+    if (account == null) {
+        model.addAttribute("error", "Account not found.");
         return "DepoWithdraw";
     }
+
+    if (amount <= 0) {
+        model.addAttribute("error", "Amount must be greater than 0.");
+        return "DepoWithdraw";
+    }
+
+    if ("deposit".equals(transactionType)) {
+        account.setBalance(account.getBalance() + amount);
+        transactionService.saveTransaction(accountNumber, "deposit", amount, "Deposited into account");
+    } else if ("withdraw".equals(transactionType)) {
+        if (account.getBalance() < amount) {
+            model.addAttribute("error", "Insufficient balance.");
+            return "DepoWithdraw";
+        }
+        account.setBalance(account.getBalance() - amount);
+        transactionService.saveTransaction(accountNumber, "withdraw", amount, "Withdrawn from account");
+    } else {
+        model.addAttribute("error", "Invalid transaction type.");
+        return "DepoWithdraw";
+    }
+
+    accountRepository.save(account);
+    model.addAttribute("message", "Transaction successful! New Balance: " + account.getBalance());
+    return "DepoWithdraw";
+}
+
+@GetMapping("/transaction-history")
+public String showTransactionHistoryPage(@RequestParam(value = "accountNumber", required = false) String accountNumber,
+                                         Model model) {
+    if (accountNumber != null && !accountNumber.isEmpty()) {
+        List<Transaction> transactions = transactionService.getTransactionsByAccountNumber(accountNumber);
+        model.addAttribute("transactions", transactions);
+    }
+    return "transaction-history";
+}
+
+
+
+    
 }

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Loan Application Result</title>
+</head>
+<body>
+    <h1>Loan Application Result</h1>
+    <h2>Loan ID: {{loanData.loanId}}</h2>
+    <h3>Prediction: {{prediction}}</h3>
+    <h4>Loan Details:</h4>
+    <ul>
+        <li>Number of Dependents: {{loanData.noOfDependents}}</li>
+        <li>Education: {{loanData.education}}</li>
+        <li>Self Employed: {{loanData.selfEmployed}}</li>
+        <li>Income Per Annum: {{loanData.incomeAnnum}}</li>
+        <li>Loan Amount: {{loanData.loanAmount}}</li>
+        <li>Loan Term: {{loanData.loanTerm}}</li>
+        <li>CIBIL Score: {{loanData.cibilScore}}</li>
+        <li>Residential Assets Value: {{loanData.residentialAssetsValue}}</li>
+        <li>Commercial Assets Value: {{loanData.commercialAssetsValue}}</li>
+        <li>Luxury Assets Value: {{loanData.luxuryAssetsValue}}</li>
+        <li>Bank Asset Value: {{loanData.bankAssetValue}}</li>
+    </ul>
+    <a href="/">Go back to the form</a>
+</body>
+</html>

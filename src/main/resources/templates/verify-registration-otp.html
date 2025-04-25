@@ -1,22 +1,11 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Registration Verification</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <center>
-    <div class="container">
-        <h2>Verify Your Email</h2>
-        <form action="/verify-registration-otp" method="post">
-            <input type="hidden" name="email" th:value="${email}">
-            <br>
-            <input type="text" name="otp" placeholder="Enter OTP sent to your email" required>
-            <br>
-            <button type="submit">Verify</button>
-        </form>
-        <p th:text="${message}"></p>
-    </div>
-</center>
-</body>
-</html>
+<form action="/verify-registration-otp" method="post">
+    <input type="hidden" name="email" value="${email}" />
+    <input type="hidden" name="name" value="${name}" />
+    <input type="hidden" name="dob" value="${dob}" />
+    <input type="hidden" name="mobileNumber" value="${mobileNumber}" />
+    <input type="hidden" name="accountType" value="${accountType}" />
+    
+    <label>Enter OTP:</label>
+    <input type="text" name="otp" required />
+    <button type="submit">Verify</button>
+</form>

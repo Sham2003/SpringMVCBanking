@@ -72,11 +72,16 @@ public class UserServiceImpl implements UserService {
 
     // ✅ Core reusable method
     private void sendEmail(String toEmail, String subject, String body) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject(subject);
-        message.setText(body);
-        message.setFrom("vedhadharshinij2003@gmail.com"); // Use your verified sender email
-        mailSender.send(message);
+        System.out.println("===================================" );
+        System.out.println("Sending email to " + toEmail);
+        System.out.println("Subject: " + subject);
+        System.out.println("Body: " + body);
+        System.out.println("===================================" );
+//        SimpleMailMessage message = new SimpleMailMessage();
+//        message.setTo(toEmail);
+//        message.setSubject(subject);
+//        message.setText(body);
+//        message.setFrom("vedhadharshinij2003@gmail.com"); // Use your verified sender email
+//        mailSender.send(message);
     }
 }

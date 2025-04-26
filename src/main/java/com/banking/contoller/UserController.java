@@ -118,28 +118,6 @@ public class UserController {
     }
 
 
-
-    @PostMapping("/view-account")
-    public String viewAccountDetails(@RequestParam("email") String email, Model model) {
-        String jpql = "SELECT u, a FROM User u LEFT JOIN Account a ON u.email = a.email WHERE u.email = :email";
-        List<Object[]> results = entityManager.createQuery(jpql, Object[].class)
-                                              .setParameter("email", email)
-                                              .getResultList();
-
-        if (results.isEmpty()) {
-            model.addAttribute("message", "User not found.");
-            return "dashboard";
-        }
-
-        Object[] result = results.get(0);
-        User user = (User) result[0];
-        Account account = (Account) result[1];
-
-        model.addAttribute("user", user);
-        model.addAttribute("account", account);
-        return "view-account";
-    }
-
     @GetMapping("/banktransfer")
     public String showTransactionForm() {
         return "banktransfer";
@@ -227,15 +205,7 @@ public String processDepositWithdraw(@RequestParam String accountNumber,
     return "DepoWithdraw";
 }
 
-@GetMapping("/transaction-history")
-public String showTransactionHistoryPage(@RequestParam(value = "accountNumber", required = false) String accountNumber,
-                                         Model model) {
-    if (accountNumber != null && !accountNumber.isEmpty()) {
-        List<Transaction> transactions = transactionService.getTransactionsByAccountNumber(accountNumber);
-        model.addAttribute("transactions", transactions);
-    }
-    return "transaction-history";
-}
+
 
 
 

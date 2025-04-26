@@ -56,6 +56,7 @@ def predict():
     # Basic validation: check all features exist
     missing = [f for f in FEATURE_ORDER if f not in data]
     if missing:
+        print(missing)
         return jsonify(error=f"Missing fields: {', '.join(missing)}"), 400
 
     try:
@@ -64,11 +65,14 @@ def predict():
 
         # Predict: 1 = approved, 0 = rejected (adjust if your model differs)
         pred = model.predict(row)[0]
+        print(row)
+        print(pred)
 
         label = "approved" if pred == 1 else "rejected"
         return jsonify(approved=label)
 
     except Exception as ex:
+        print(ex)
         return jsonify(error=str(ex)), 500
 
 

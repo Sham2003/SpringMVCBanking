@@ -1,5 +1,5 @@
 // src/main/java/com/example/sample/dto/LoanFeatures.java
-package com.banking.dto;
+package com.banking.dto.loan;
 
 import java.io.Serializable;
 

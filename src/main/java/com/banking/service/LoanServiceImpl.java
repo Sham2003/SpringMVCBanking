@@ -1,7 +1,8 @@
 // src/main/java/com/example/sample/service/LoanServiceImpl.java
 package com.banking.service;
 
-import com.banking.dto.*;
+import com.banking.dto.loan.LoanFeatures;
+import com.banking.dto.loan.LoanForm;
 import com.banking.ml.PythonScorer;
 import com.banking.model.Loan;
 import com.banking.repository.LoanRepository;

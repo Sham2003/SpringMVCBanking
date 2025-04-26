@@ -1,12 +1,14 @@
 // src/main/java/com/example/sample/controller/LoanController.java
 package com.banking.contoller;
 
-import com.banking.dto.LoanForm;
+import com.banking.dto.loan.LoanForm;
 import com.banking.model.Loan;
 import com.banking.service.LoanService;
 import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -28,25 +30,23 @@ public class LoanController {
 
     /* ------------ 2. HANDLE SUBMIT --------------- */
     @PostMapping("/submitLoanApplication")
-    public String submitLoanApplication(
-            @ModelAttribute("loanForm") @Valid LoanForm loanForm,
+    public ResponseEntity<Loan> submitLoanApplication(@RequestBody @Valid LoanForm loanForm,
             BindingResult errors,
             Model model) {
-
         /* ---- a. validation ---- */
         if (errors.hasErrors()) {
             // Log all field errors for debugging
             errors.getFieldErrors()
                   .forEach(fe -> log.warn("Validation error: {} → {}", fe.getField(), fe.getDefaultMessage()));
             // show form again with messages
-            return "apply";
+            throw new ValidationException(errors.toString());
         }
 
         /* ---- b. business processing ---- */
         Loan loan = loanService.processApplication(loanForm);
 
         // flash attributes if you use RedirectAttributes, but here we'll bind via URL
-        return "redirect:/result/" + loan.getLoanId();
+        return ResponseEntity.ok().body(loan);
     }
 
     /* ------------ 3. RESULT PAGE --------------- */

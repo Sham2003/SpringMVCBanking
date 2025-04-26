@@ -144,26 +144,31 @@ public class AuthController {
 
 
     @PostMapping("/reset-password")
-    public String resetPassword(@RequestParam("email") String email,
+    public ResponseEntity<?> resetPassword(@RequestParam("email") String email,
                                 @RequestParam("newPassword") String newPassword,
                                 @RequestParam("confirmPassword") String confirmPassword,
                                 Model model) {
         if (!newPassword.equals(confirmPassword)) {
-            model.addAttribute("message", "Passwords do not match!");
-            return "reset-password";
+            return ResponseEntity
+                    .badRequest()
+                    .body("Passwords do not match!");
         }
 
         if (isInvalidPassword(newPassword)) {
-            model.addAttribute("message", "Password must be strong (8+ chars, upper, lower, digit, special).");
-            return "reset-password";
+            return ResponseEntity
+                    .badRequest()
+                    .body("Password must be strong (8+ chars, upper, lower, digit, special).");
         }
 
         User user = userService.findByEmail(email);
+        if(user == null) {
+            throw new UserNotFoundException("User not found.");
+        }
         user.setPassword(newPassword);
         user.setOtp(null);
         userService.saveUser(user);
 
-        model.addAttribute("message", "Password reset successful.");
-        return "login";
+        return ResponseEntity
+                .ok("Password reset successful.");
     }
 }

@@ -1,7 +1,7 @@
 // src/main/java/com/example/sample/ml/PythonScorer.java
 package com.banking.ml;
 
-import com.banking.dto.LoanFeatures;
+import com.banking.dto.loan.LoanFeatures;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;

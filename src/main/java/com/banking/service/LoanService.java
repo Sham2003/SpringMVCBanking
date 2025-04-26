@@ -1,7 +1,7 @@
 // src/main/java/com/example/sample/service/LoanService.java
 package com.banking.service;
 
-import com.banking.dto.LoanForm;
+import com.banking.dto.loan.LoanForm;
 import com.banking.model.Loan;
 
 import java.util.Optional;

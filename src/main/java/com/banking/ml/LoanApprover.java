@@ -20,7 +20,6 @@ import ai.onnxruntime.OrtSession;
 import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OrtException;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

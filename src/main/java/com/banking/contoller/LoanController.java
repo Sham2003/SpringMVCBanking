@@ -43,6 +43,7 @@ public class LoanController {
 
     @GetMapping("/loans")
     public List<String> getLoans(@RequestParam String email){
+        System.out.println(email);
         return List.of();
     }
 

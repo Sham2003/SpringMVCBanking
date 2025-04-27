@@ -19,16 +19,8 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
     private AccountService accountService;
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private OtpService otpService;
 
     private boolean isInvalidPassword(String password) {
         String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z\\d]).{6,}$";

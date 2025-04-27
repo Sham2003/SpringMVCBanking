@@ -31,7 +31,7 @@ public class UserController {
 
 
     @PostMapping(value = "/initiatePasswordReset",produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<?> initiateResetPassword(@RequestParam("email") String email) throws MessagingException {
+    public ResponseEntity<?> initiateResetPassword(@RequestParam("email") String email) {
         String reqId = String.valueOf(userService.initiatePasswordReset(email));
 
         return ResponseEntity.status(HttpStatus.OK).body(reqId);

@@ -3,7 +3,6 @@ import com.banking.dto.auth.LoginDto;
 import com.banking.dto.auth.LoginResponse;
 import com.banking.dto.auth.ResetPasswordDTO;
 import com.banking.model.User;
-import jakarta.mail.MessagingException;
 
 import javax.security.auth.login.AccountLockedException;
 

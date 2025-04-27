@@ -6,21 +6,15 @@ import com.banking.exceptions.exps.AuthExceptions.*;
 import com.banking.exceptions.exps.TransactionExceptions.InsufficientBalanceException;
 import com.banking.model.Account;
 import com.banking.model.Transaction;
-import com.banking.model.User;
 import com.banking.repository.AccountRepository;
-import com.banking.repository.TransactionRepository;
-import com.banking.service.AccountService;
 import com.banking.service.TransactionService;
-import com.banking.service.UserService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.InsufficientResourcesException;
 import java.util.List;
 
 @RestController
@@ -29,16 +23,8 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private AccountRepository accountRepository;
 
-    @Autowired
-    private AccountService accountService;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -55,7 +41,6 @@ public class TransactionController {
         }
 
         Object[] result = results.get(0);
-        User user = (User) result[0];
         Account account = (Account) result[1];
 
 
@@ -73,7 +58,7 @@ public class TransactionController {
     }
 
     @PostMapping(value = "/bank-transfer",produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TransactionResponse> processTransaction(@RequestBody TransactionRequest transactionRequest) throws InsufficientResourcesException, InsufficientBalanceException {
+    public ResponseEntity<TransactionResponse> processTransaction(@RequestBody TransactionRequest transactionRequest) throws InsufficientBalanceException {
 
         Account senderAccount = accountRepository.findByAccountNumber(transactionRequest.getSenderAccountNumber());
         Account receiverAccount = accountRepository.findByAccountNumber(transactionRequest.getReceiverAccountNumber());

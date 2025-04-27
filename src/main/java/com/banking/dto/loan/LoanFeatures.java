@@ -51,25 +51,6 @@ public class LoanFeatures implements Serializable {
         this.bankAssetValue          = (float) form.getBankAssetValue();
     }
 
-    // Add getters and setters here
-
-    // Add this method to convert to float array
-    public float[] toFloatArray() {
-        return new float[]{
-                noOfDependents,
-                education,
-                selfEmployed,
-                incomeAnnum,
-                loanAmount,
-                loanTerm,
-                cibilScore,
-                residentialAssetsValue,
-                commercialAssetsValue,
-                luxuryAssetsValue,
-                bankAssetValue
-        };
-    }
-
     public Map<String, Float> toFeatureMap() {
         Map<String, Float> map = new HashMap<>();
         map.put("no_of_dependents", noOfDependents);

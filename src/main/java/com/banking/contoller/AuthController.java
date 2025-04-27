@@ -143,8 +143,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestParam("email") String email,
                                 @RequestParam("newPassword") String newPassword,
-                                @RequestParam("confirmPassword") String confirmPassword,
-                                Model model) {
+                                @RequestParam("confirmPassword") String confirmPassword) {
         if (!newPassword.equals(confirmPassword)) {
             throw new InvalidPasswordException("Passwords do not match");
         }
@@ -164,9 +163,6 @@ public class AuthController {
         return ResponseEntity
                 .ok(new Object(){
                     public final String message = "Password reset successful.";
-                    public String getMessage(){
-                        return message;
-                    }
                 });
     }
 }

@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,8 +27,7 @@ public class LoanController {
     /* ------------ 2. HANDLE SUBMIT --------------- */
     @PostMapping("/submitLoanApplication")
     public ResponseEntity<Loan> submitLoanApplication(@RequestBody @Valid LoanForm loanForm,
-            BindingResult errors,
-            Model model) throws OrtException {
+            BindingResult errors) throws OrtException {
         if (errors.hasErrors()) {
             errors.getFieldErrors()
                   .forEach(fe -> log.warn("Validation error: {} → {}", fe.getField(), fe.getDefaultMessage()));
@@ -49,7 +47,7 @@ public class LoanController {
     }
 
     @GetMapping("/loan/{loanId}")
-    public ResponseEntity<Loan> showResult(@PathVariable String loanId, Model model) {
+    public ResponseEntity<Loan> showResult(@PathVariable String loanId) {
         Loan loan =  loanService.findById(loanId)
                                .orElseThrow(() -> new IllegalArgumentException("Unknown loanId " + loanId));
         return ResponseEntity.ok().body(loan);

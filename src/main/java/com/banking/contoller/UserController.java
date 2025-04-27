@@ -1,24 +1,11 @@
 package com.banking.contoller;
 
 import com.banking.model.User;
-import com.banking.model.Account;
-import com.banking.model.Transaction;
-import com.banking.repository.AccountRepository;
-import com.banking.repository.TransactionRepository;
-import com.banking.service.AccountService;
-import com.banking.service.TransactionService;
 import com.banking.service.UserService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import java.security.Principal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Period;
-import java.util.List;
 import java.util.Random;
 
 @Controller

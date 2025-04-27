@@ -21,7 +21,6 @@ import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OrtException;
 
 import java.io.IOException;
-import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class LoanApprover {
     private final OrtEnvironment env;
     private final OrtSession session;
 
-    public LoanApprover() throws OrtException, IOException {
+    public LoanApprover() throws OrtException {
         env = OrtEnvironment.getEnvironment();
         session = env.createSession("src/main/resources/ml/loan_model.onnx", new OrtSession.SessionOptions());
         System.out.println(session.getInputNames());
@@ -46,13 +45,11 @@ public class LoanApprover {
         // Prepare each input separately based on model input names
         Map<String, Float> featureMap = features.toFeatureMap();
         for (String inputName : session.getInputNames()) {
-            Object value = featureMap.get(inputName);
+            Float value = featureMap.get(inputName);
             OnnxTensor tensor;
 
-            if (value instanceof Float) {
-                tensor = OnnxTensor.createTensor(env, new float[][]{{(Float) value}});
-            } else if (value instanceof String) {
-                tensor = OnnxTensor.createTensor(env, new String[][]{{(String) value}});
+            if (value != null) {
+                tensor = OnnxTensor.createTensor(env, new float[][]{{value}});
             } else {
                 throw new IllegalArgumentException("Unsupported feature type for " + inputName);
             }

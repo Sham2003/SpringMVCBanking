@@ -4,7 +4,6 @@ import com.banking.dto.auth.LoginDto;
 import com.banking.dto.auth.LoginResponse;
 import com.banking.dto.auth.ResetPasswordDTO;
 import com.banking.service.UserService;
-import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

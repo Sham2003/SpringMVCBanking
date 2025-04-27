@@ -3,7 +3,6 @@ package com.banking.contoller;
 import com.banking.dto.auth.*;
 import com.banking.exceptions.exps.AuthExceptions.*;
 import com.banking.model.PendingAccount;
-import com.banking.model.User;
 import com.banking.repository.AccountRepository;
 import com.banking.service.AccountService;
 import com.banking.service.OtpService;
@@ -12,12 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 
 import org.springframework.web.bind.annotation.*;
 
-import javax.security.auth.login.AccountLockedException;
-import java.time.LocalDateTime;
 
 @RestController
 public class AuthController {
@@ -73,53 +69,6 @@ public class AuthController {
         String accountNumber = accountService.verifyPendingAccount(email);
         RegisterResponse response = new RegisterResponse(accountNumber,email,pendingAccount.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-
-    @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<LoginResponse> loginUser(@RequestBody LoginDto loginDto) throws AccountLockedException {
-        User existingUser = userService.findByEmail(loginDto.getEmail());
-
-        if (existingUser == null) {
-            throw new UserNotFoundException("User not found.");
-        }
-
-        if (accountRepository.findByEmail(loginDto.getEmail()) == null) {
-            throw new AccountNotFoundException("No account exists for this user. Please create an account first.");
-        }
-
-        if (existingUser.getAccountLockedUntil() != null &&
-                existingUser.getAccountLockedUntil().isAfter(LocalDateTime.now())) {
-            throw new AccountLockedException("Account is locked. Try again after: " + existingUser.getAccountLockedUntil());
-        }
-
-        if (!existingUser.getPassword().equals(loginDto.getPassword())) {
-            int attempts = existingUser.getFailedLoginAttempts() + 1;
-            existingUser.setFailedLoginAttempts(attempts);
-
-            if (attempts >= 3) {
-                LocalDateTime lockUntil = LocalDateTime.now().plusMinutes(3);
-                existingUser.setAccountLockedUntil(lockUntil);
-                userService.saveUser(existingUser);
-
-                try {
-                    otpService.sendAccountLockedEmail(existingUser.getEmail(), lockUntil);
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
-
-                throw new AccountLockedException("Account is locked. Try again after: " + lockUntil);
-            }
-
-            userService.saveUser(existingUser);
-            throw new BadCredentialsException("Invalid credentials! Attempt " + attempts + " of 3.");
-        }
-
-        existingUser.setFailedLoginAttempts(0);
-        existingUser.setAccountLockedUntil(null);
-        userService.saveUser(existingUser);
-
-        return ResponseEntity.status(HttpStatus.OK).body(LoginResponse.builder().email(loginDto.getEmail()).build());
     }
 
 }

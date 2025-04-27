@@ -24,7 +24,6 @@ public class LoanController {
     private final LoanService loanService;
 
 
-    /* ------------ 2. HANDLE SUBMIT --------------- */
     @PostMapping("/submitLoanApplication")
     public ResponseEntity<Loan> submitLoanApplication(@RequestBody @Valid LoanForm loanForm,
             BindingResult errors) throws OrtException {
@@ -35,7 +34,6 @@ public class LoanController {
             throw new ValidationException(errors.toString());
         }
 
-        /* ---- b. business processing ---- */
         Loan loan = loanService.processApplication(loanForm);
 
         return ResponseEntity.ok().body(loan);

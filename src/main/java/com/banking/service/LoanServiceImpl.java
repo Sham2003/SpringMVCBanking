@@ -3,7 +3,7 @@ package com.banking.service;
 
 import com.banking.dto.loan.LoanFeatures;
 import com.banking.dto.loan.LoanForm;
-import com.banking.ml.PythonScorer;
+import com.banking.ml.LoanApprover;
 import com.banking.model.Loan;
 import com.banking.repository.LoanRepository;
 import org.springframework.stereotype.Service;
@@ -15,11 +15,11 @@ import java.util.Optional;
 public class LoanServiceImpl implements LoanService {
 
     private final LoanRepository repo;
-    private final PythonScorer scorer;
+    private final LoanApprover approver;
 
-    public LoanServiceImpl(LoanRepository repo, PythonScorer scorer) {
+    public LoanServiceImpl(LoanRepository repo, LoanApprover approver) {
         this.repo = repo;
-        this.scorer = scorer;
+        this.approver = approver;
     }
 
     @Override
@@ -27,18 +27,9 @@ public class LoanServiceImpl implements LoanService {
     public Loan processApplication(LoanForm f) {
 
         // Build feature object
-        LoanFeatures features = new LoanFeatures(
-                f.getNoOfDependents(),
-                f.getIncomeAnnum(),
-                f.getLoanAmount(),
-                f.getLoanTerm(),
-                f.getCibilScore(),
-                f.getResidentialAssetsValue(),
-                f.getCommercialAssetsValue(),
-                f.getLuxuryAssetsValue(),
-                f.getBankAssetValue());
+        LoanFeatures features = new LoanFeatures(f);
 
-        String decision = scorer.score(features);
+        String decision = approver.approveLoan(features);
 
         // Build and save entity
         Loan loan = new Loan(

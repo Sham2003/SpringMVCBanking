@@ -3,15 +3,15 @@ package com.banking.contoller;
 import com.banking.dto.auth.LoginDto;
 import com.banking.dto.auth.LoginResponse;
 import com.banking.dto.auth.RegisterAccountDTO;
-import com.banking.exceptions.AccountNotFoundException;
-import com.banking.exceptions.UserNotFoundException;
+import com.banking.dto.auth.RegisterResponse;
+import com.banking.exceptions.exps.AuthExceptions.*;
 import com.banking.model.Account;
 import com.banking.model.User;
 import com.banking.repository.AccountRepository;
-import com.banking.repository.UserRepository;
 import com.banking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.ui.Model;
@@ -24,8 +24,6 @@ import java.util.Random;
 
 @RestController
 public class AuthController {
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -38,22 +36,21 @@ public class AuthController {
         return password == null || !password.matches(pattern);
     }
 
-    @PostMapping("/create-account")
-    public ResponseEntity<String> createAccount(@RequestBody RegisterAccountDTO registerAccountDTO) {
-
+    @PostMapping(value = "/create-account",produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RegisterResponse> createAccount(@RequestBody RegisterAccountDTO registerAccountDTO) {
         // Check if the email already exists for an account
         if (accountRepository.findByEmail(registerAccountDTO.getEmail()) != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Account already exists for this email.");
+            throw new AccountExistsException("Account already exists with email: " + registerAccountDTO.getEmail());
         }
 
         // Validate password and confirm password match
         if (!registerAccountDTO.getPassword().equals(registerAccountDTO.getConfirmPassword())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Passwords do not match.");
+            throw new InvalidPasswordException("Passwords do not match");
         }
 
         // Validate password strength
         if (isInvalidPassword(registerAccountDTO.getPassword())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Password must be at least 6 characters long, contain one uppercase letter, one lowercase letter, one digit, and one special character.");
+            throw new WeakPasswordException("Password must be at least 6 characters long, contain one uppercase letter, one lowercase letter, one digit, and one special character.");
         }
 
         // Check if the user already exists
@@ -72,7 +69,7 @@ public class AuthController {
         if (dateOfBirth.plusYears(age).isAfter(today)) age--;
 
         if (age < 18) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("You are not allowed to register an account.");
+            throw new SecurityException("Age must be at least 18");
         }
 
         // Generate a random account number
@@ -90,12 +87,12 @@ public class AuthController {
 
         accountRepository.save(account);
 
-        // Redirect to the success page with the account number
-        return ResponseEntity.status(HttpStatus.CREATED).body("Account created. Account number: " + accountNumber);
+        RegisterResponse response = new RegisterResponse(accountNumber);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 
-    @PostMapping("/login")
+    @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<LoginResponse> loginUser(@RequestBody LoginDto loginDto, Model model) throws AccountLockedException {
         User existingUser = userService.findByEmail(loginDto.getEmail());
 
@@ -124,7 +121,7 @@ public class AuthController {
                 try {
                     userService.sendAccountLockedEmail(existingUser.getEmail(), lockUntil);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.out.println(e.getMessage());
                 }
 
                 model.addAttribute("message", "Account locked due to 3 failed attempts. Try again after: " + lockUntil);
@@ -149,15 +146,11 @@ public class AuthController {
                                 @RequestParam("confirmPassword") String confirmPassword,
                                 Model model) {
         if (!newPassword.equals(confirmPassword)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("Passwords do not match!");
+            throw new InvalidPasswordException("Passwords do not match");
         }
 
         if (isInvalidPassword(newPassword)) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("Password must be strong (8+ chars, upper, lower, digit, special).");
+            throw new WeakPasswordException("Password must be strong (8+ chars, upper, lower, digit, special).");
         }
 
         User user = userService.findByEmail(email);
@@ -169,6 +162,11 @@ public class AuthController {
         userService.saveUser(user);
 
         return ResponseEntity
-                .ok("Password reset successful.");
+                .ok(new Object(){
+                    public final String message = "Password reset successful.";
+                    public String getMessage(){
+                        return message;
+                    }
+                });
     }
 }

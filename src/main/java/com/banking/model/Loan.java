@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "loans")
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class Loan {
 

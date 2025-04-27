@@ -14,6 +14,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 @Slf4j
@@ -21,40 +23,34 @@ public class LoanController {
 
     private final LoanService loanService;
 
-    /* ------------ 1. SHOW BLANK FORM ------------ */
-    @GetMapping("/apply")
-    public String showForm(Model model) {
-        model.addAttribute("loanForm", new LoanForm());
-        return "apply";
-    }
 
     /* ------------ 2. HANDLE SUBMIT --------------- */
     @PostMapping("/submitLoanApplication")
     public ResponseEntity<Loan> submitLoanApplication(@RequestBody @Valid LoanForm loanForm,
             BindingResult errors,
             Model model) {
-        /* ---- a. validation ---- */
         if (errors.hasErrors()) {
-            // Log all field errors for debugging
             errors.getFieldErrors()
                   .forEach(fe -> log.warn("Validation error: {} → {}", fe.getField(), fe.getDefaultMessage()));
-            // show form again with messages
+
             throw new ValidationException(errors.toString());
         }
 
         /* ---- b. business processing ---- */
         Loan loan = loanService.processApplication(loanForm);
 
-        // flash attributes if you use RedirectAttributes, but here we'll bind via URL
         return ResponseEntity.ok().body(loan);
     }
 
-    /* ------------ 3. RESULT PAGE --------------- */
-    @GetMapping("/result/{loanId}")
-    public String showResult(@PathVariable String loanId, Model model) {
+    @GetMapping("/loans")
+    public List<String> getLoans(@RequestParam String email){
+        return List.of();
+    }
+
+    @GetMapping("/loan/{loanId}")
+    public ResponseEntity<Loan> showResult(@PathVariable String loanId, Model model) {
         Loan loan =  loanService.findById(loanId)
                                .orElseThrow(() -> new IllegalArgumentException("Unknown loanId " + loanId));
-        model.addAttribute("loan", loan);
-        return "result";
+        return ResponseEntity.ok().body(loan);
     }
 }

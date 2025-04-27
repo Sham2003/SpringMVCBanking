@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 @Getter
@@ -67,5 +68,21 @@ public class LoanFeatures implements Serializable {
                 luxuryAssetsValue,
                 bankAssetValue
         };
+    }
+
+    public Map<String, Float> toFeatureMap() {
+        Map<String, Float> map = new HashMap<>();
+        map.put("no_of_dependents", noOfDependents);
+        map.put("education", education);
+        map.put("self_employed", selfEmployed);
+        map.put("income_annum", incomeAnnum);
+        map.put("loan_amount", loanAmount);
+        map.put("loan_term", loanTerm);
+        map.put("cibil_score", cibilScore);
+        map.put("residential_assets_value", residentialAssetsValue);
+        map.put("commercial_assets_value", commercialAssetsValue);
+        map.put("luxury_assets_value", luxuryAssetsValue);
+        map.put("bank_asset_value", bankAssetValue);
+        return map;
     }
 }

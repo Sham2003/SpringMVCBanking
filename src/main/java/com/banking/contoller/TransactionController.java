@@ -73,7 +73,7 @@ public class TransactionController {
     }
 
     @PostMapping(value = "/bank-transfer",produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TransactionResponse> processTransaction(@RequestBody TransactionRequest transactionRequest) throws InsufficientResourcesException {
+    public ResponseEntity<TransactionResponse> processTransaction(@RequestBody TransactionRequest transactionRequest) throws InsufficientResourcesException, InsufficientBalanceException {
 
         Account senderAccount = accountRepository.findByAccountNumber(transactionRequest.getSenderAccountNumber());
         Account receiverAccount = accountRepository.findByAccountNumber(transactionRequest.getReceiverAccountNumber());
@@ -87,7 +87,7 @@ public class TransactionController {
         }
 
         if (senderAccount.getBalance() < transactionRequest.getAmount()) {
-            throw new InsufficientResourcesException("Insufficient Balance");
+            throw new InsufficientBalanceException("Insufficient Balance");
         }
 
         senderAccount.setBalance(senderAccount.getBalance() - transactionRequest.getAmount());

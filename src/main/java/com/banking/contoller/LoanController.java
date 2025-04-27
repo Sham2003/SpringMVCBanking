@@ -1,6 +1,7 @@
 // src/main/java/com/example/sample/controller/LoanController.java
 package com.banking.contoller;
 
+import ai.onnxruntime.OrtException;
 import com.banking.dto.loan.LoanForm;
 import com.banking.model.Loan;
 import com.banking.service.LoanService;
@@ -28,7 +29,7 @@ public class LoanController {
     @PostMapping("/submitLoanApplication")
     public ResponseEntity<Loan> submitLoanApplication(@RequestBody @Valid LoanForm loanForm,
             BindingResult errors,
-            Model model) {
+            Model model) throws OrtException {
         if (errors.hasErrors()) {
             errors.getFieldErrors()
                   .forEach(fe -> log.warn("Validation error: {} → {}", fe.getField(), fe.getDefaultMessage()));

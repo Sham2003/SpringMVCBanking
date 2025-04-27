@@ -1,6 +1,7 @@
 // src/main/java/com/example/sample/service/LoanServiceImpl.java
 package com.banking.service;
 
+import ai.onnxruntime.OrtException;
 import com.banking.dto.loan.LoanFeatures;
 import com.banking.dto.loan.LoanForm;
 import com.banking.ml.LoanApprover;
@@ -24,7 +25,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional
-    public Loan processApplication(LoanForm f) {
+    public Loan processApplication(LoanForm f) throws OrtException {
 
         // Build feature object
         LoanFeatures features = new LoanFeatures(f);

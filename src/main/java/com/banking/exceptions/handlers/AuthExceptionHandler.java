@@ -41,6 +41,45 @@ public class AuthExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(InvalidOtpException.class)
+    public ResponseEntity<ExceptionResponse> handleException(InvalidOtpException exp) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(
+                        ExceptionResponse.builder()
+                                .serverErrorCode(ErrorCodes.INVALID_OTP.getCode())
+                                .serverErrorDescrtiption(ErrorCodes.INVALID_OTP.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(ExpiredOtpException.class)
+    public ResponseEntity<ExceptionResponse> handleException(ExpiredOtpException exp) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(
+                        ExceptionResponse.builder()
+                                .serverErrorCode(ErrorCodes.EXPIRED_OTP.getCode())
+                                .serverErrorDescrtiption(ErrorCodes.EXPIRED_OTP.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(NoSuchRequestException.class)
+    public ResponseEntity<ExceptionResponse> handleException(NoSuchRequestException exp) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(
+                        ExceptionResponse.builder()
+                                .serverErrorCode(ErrorCodes.NO_SUCH_REQUEST.getCode())
+                                .serverErrorDescrtiption(ErrorCodes.NO_SUCH_REQUEST.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
     @ExceptionHandler(WeakPasswordException.class)
     public ResponseEntity<ExceptionResponse> handleException(WeakPasswordException exp) {
         return ResponseEntity

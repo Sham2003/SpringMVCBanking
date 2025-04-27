@@ -1,62 +1,38 @@
 package com.banking.contoller;
 
-import com.banking.model.User;
+import com.banking.dto.auth.ResetPasswordDTO;
 import com.banking.service.UserService;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import java.util.Random;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class UserController {
-
 
     @Autowired
     private UserService userService;
 
 
-    @PostMapping("/forgot-password")
-    public String processForgotPassword(@RequestParam("email") String email, Model model) {
-        User user = userService.findByEmail(email);
-        if (user == null) {
-            model.addAttribute("message", "Email not found.");
-            return "forgot-password";
-        }
+    @PostMapping(value = "/initiatePasswordReset",produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<?> initiateResetPassword(@RequestParam("email") String email) throws MessagingException {
+        String reqId = String.valueOf(userService.initiatePasswordReset(email));
 
-        String otp = String.format("%06d", new Random().nextInt(999999));
-        user.setOtp(otp);
-        userService.saveUser(user);
-
-        try {
-            userService.sendOtpEmail(user.getEmail(), otp);
-        } catch (Exception e) {
-            model.addAttribute("message", "Failed to send email.");
-            return "forgot-password";
-        }
-
-        model.addAttribute("email", email);
-        return "verify-otp";
-    }
-
-    @PostMapping("/verify-otp")
-    public String verifyForgotPasswordOtp(@RequestParam("email") String email,
-                                          @RequestParam("otp") String otp,
-                                          Model model) {
-        User user = userService.findByEmail(email);
-        if (user == null || !user.getOtp().equals(otp)) {
-            model.addAttribute("message", "Invalid OTP.");
-            return "verify-otp";
-        }
-
-        model.addAttribute("email", email);
-        return "reset-password";
+        return ResponseEntity.status(HttpStatus.OK).body(reqId);
     }
 
 
-
-
-
+    @PostMapping(value = "/reset-password",produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
+        userService.verifyPasswordReset(resetPasswordDTO);
+        return ResponseEntity
+                .ok().build();
+    }
 
     
 }

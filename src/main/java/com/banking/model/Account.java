@@ -2,8 +2,6 @@ package com.banking.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "account")
@@ -11,19 +9,8 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Account {
+public class Account extends BaseAccount {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String name;
-    private String email;
-    private String mobileNumber;
-    private LocalDate dob;
-    private String accountType;
     private String accountNumber;
-    private String otp;
     private Double balance = 0.0;
-    private LocalDateTime createdOn = LocalDateTime.now();
 }

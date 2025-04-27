@@ -24,5 +24,18 @@ public class AuthExceptions {
             super(message);
         }
     }
+
+    public static class InvalidOtpException extends RuntimeException {
+        public InvalidOtpException(String message) { super(message); }
+    }
+
+    public static class ExpiredOtpException extends RuntimeException {
+        public ExpiredOtpException(String message) { super(message); }
+    }
+
+    public static class NoSuchRequestException extends RuntimeException {
+        public NoSuchRequestException(String message) { super(message); }
+    }
+
 }
 

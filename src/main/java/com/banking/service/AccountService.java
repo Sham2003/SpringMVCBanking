@@ -6,9 +6,11 @@ import com.banking.dto.auth.RegisterResponse;
 import com.banking.model.Account;
 import com.banking.model.PendingAccount;
 
+import java.util.List;
+
 public interface AccountService {
     // Method to get an account by email
-    Account getAccountByEmail(String email);
+    List<Account> getAccountByEmail(String email);
     String createPendingAccount(RegisterAccountDTO newAccount);
 
     PendingAccount findPendingAccount(String email);

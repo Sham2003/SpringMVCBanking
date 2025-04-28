@@ -5,6 +5,7 @@ import com.banking.dto.auth.LoginResponse;
 import com.banking.dto.auth.ResetPasswordDTO;
 import com.banking.dto.transaction.AccountInfo;
 import com.banking.exceptions.exps.AuthExceptions;
+import com.banking.model.Account;
 import com.banking.model.User;
 import com.banking.repository.AccountRepository;
 import com.banking.repository.UserRepository;
@@ -89,8 +90,9 @@ public class UserServiceImpl implements UserService {
         if (existingUser == null) {
             throw new AuthExceptions.UserNotFoundException("User not found.");
         }
+        List<Account> accounts = accountRepository.findByEmail(loginDto.getEmail());
 
-        if (accountRepository.findByEmail(loginDto.getEmail()) == null) {
+        if (accounts == null || accounts.isEmpty()) {
             throw new AuthExceptions.AccountNotFoundException("No account exists for this user. Please create an account first.");
         }
 

@@ -34,7 +34,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account getAccountByEmail(String email) {
+    public List<Account> getAccountByEmail(String email) {
         // Fetch the account by email
         return accountRepository.findByEmail(email);
     }
@@ -73,7 +73,8 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public RegisterResponse registerAccount(RegisterAccountDTO registerAccountDTO) {
 
-        if (getAccountByEmail(registerAccountDTO.getEmail()) != null) {
+
+        if (!getAccountByEmail(registerAccountDTO.getEmail()).isEmpty()) {
             throw new AuthExceptions.AccountExistsException("Account already exists with email: " + registerAccountDTO.getEmail());
         }
 

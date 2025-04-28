@@ -12,5 +12,6 @@ public interface UserService {
     String initiatePasswordReset(String email) ;
     void verifyPasswordReset(ResetPasswordDTO resetPasswordDTO);
     LoginResponse loginCheck(LoginDto loginDto) throws AccountLockedException;
+
 }
 

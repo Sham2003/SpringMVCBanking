@@ -25,7 +25,7 @@ public class LoanController {
 
 
     @PostMapping("/submitLoanApplication")
-    public ResponseEntity<Loan> submitLoanApplication(@RequestBody @Valid LoanForm loanForm,
+    public ResponseEntity<String> submitLoanApplication(@RequestBody @Valid LoanForm loanForm,
             BindingResult errors) throws OrtException {
         if (errors.hasErrors()) {
             errors.getFieldErrors()
@@ -34,15 +34,15 @@ public class LoanController {
             throw new ValidationException(errors.toString());
         }
 
-        Loan loan = loanService.processApplication(loanForm);
+        String loanId = loanService.processApplication(loanForm);
 
-        return ResponseEntity.ok().body(loan);
+        return ResponseEntity.ok().body(loanId);
     }
 
     @GetMapping("/loans")
-    public List<String> getLoans(@RequestParam String email){
-        System.out.println(email);
-        return List.of();
+    public ResponseEntity<List<String>> getLoans(@RequestParam String email){
+        List<String> loanIds = loanService.getUserLoans(email);
+        return ResponseEntity.ok().body(loanIds);
     }
 
     @GetMapping("/loan/{loanId}")

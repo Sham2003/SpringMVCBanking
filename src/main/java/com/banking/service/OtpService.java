@@ -5,6 +5,7 @@ import com.banking.exceptions.exps.AuthExceptions.NoSuchRequestException;
 import com.banking.exceptions.exps.AuthExceptions.ExpiredOtpException;
 import com.banking.model.OtpRequest;
 import com.banking.repository.OtpRequestRepository;
+import jakarta.validation.constraints.Email;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -100,5 +101,18 @@ public class OtpService {
         if(!otpRequest.getEmail().equals(email))
             throw new NoSuchRequestException("Email does not match");
         otpRequest.setStatus(OtpRequest.OTP_STATUS.EXPIRED);
+    }
+
+    public UUID makeActivationCodeRequest(@Email String email) {
+        OtpRequest otpRequest = new OtpRequest();
+        otpRequest.setEmail(email);
+        otpRequest.setOtp(generateOtp());
+        otpRequest.setType(OtpRequest.OTP_TYPE.ACTIVATION_CODE);
+        otpRequest.setStatus(OtpRequest.OTP_STATUS.ONGOING);
+        otpRequest.setMessage("INITIAL PASSWORD RESET REQUEST");
+        otpRequestRepository.save(otpRequest);
+        System.out.println("Sent OTP to " + email + " OTP :" + otpRequest.getOtp());
+        //sendOtpEmail(email, otpRequest.getOtp());
+        return otpRequest.getId();
     }
 }

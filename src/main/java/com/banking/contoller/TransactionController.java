@@ -22,10 +22,6 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @Autowired
-    private AccountRepository accountRepository;
-
-
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -59,72 +55,13 @@ public class TransactionController {
 
     @PostMapping(value = "/bank-transfer",produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TransactionResponse> processTransaction(@RequestBody TransactionRequest transactionRequest) throws InsufficientBalanceException {
-
-        Account senderAccount = accountRepository.findByAccountNumber(transactionRequest.getSenderAccountNumber());
-        Account receiverAccount = accountRepository.findByAccountNumber(transactionRequest.getReceiverAccountNumber());
-
-        if (receiverAccount == null || senderAccount == null) {
-            throw new AccountNotFoundException("Account not found");
-        }
-
-        if (transactionRequest.getAmount() <= 0) {
-            throw new IllegalArgumentException("Amount must be greater than zero");
-        }
-
-        if (senderAccount.getBalance() < transactionRequest.getAmount()) {
-            throw new InsufficientBalanceException("Insufficient Balance");
-        }
-
-        senderAccount.setBalance(senderAccount.getBalance() - transactionRequest.getAmount());
-        receiverAccount.setBalance(receiverAccount.getBalance() + transactionRequest.getAmount());
-
-        accountRepository.save(senderAccount);
-        accountRepository.save(receiverAccount);
-
-        // Save transaction records for both sender and receiver
-        String senderAccountNumber = transactionRequest.getSenderAccountNumber();
-        String receiverAccountNumber = transactionRequest.getReceiverAccountNumber();
-        double amount = transactionRequest.getAmount();
-        transactionService.saveTransaction(senderAccountNumber, "transfer", amount, "Transferred to " + receiverAccountNumber);
-        transactionService.saveTransaction(receiverAccountNumber, "transfer", amount, "Received from " + senderAccountNumber);
-
-        return ResponseEntity.ok().body(
-                TransactionResponse
-                        .builder()
-                        .message("Transfer successful")
-                        .senderBalance(senderAccount.getBalance())
-                        .build()
-        );
+        TransactionResponse transactionResponse = transactionService.processTransaction(transactionRequest);
+        return ResponseEntity.ok().body(transactionResponse);
     }
 
     @PostMapping("/depo-withdraw")
     public ResponseEntity<?> processDepositWithdraw(@RequestBody DepoWithdrawRequest depoWithdrawRequest) throws InsufficientBalanceException {
-        String transactionType = depoWithdrawRequest.getTransactionType();
-        double amount = depoWithdrawRequest.getAmount();
-        String accountNumber = depoWithdrawRequest.getAccountNumber();
-        Account account = accountRepository.findByAccountNumber(depoWithdrawRequest.getAccountNumber());
-
-        if (account == null) {
-           throw new AccountNotFoundException("Account not found");
-        }
-
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Amount must be greater than zero");
-        }
-        if ("deposit".equals(transactionType)) {
-            account.setBalance(account.getBalance() + amount);
-            transactionService.saveTransaction(accountNumber, "deposit", amount, "Deposited into account");
-        } else if ("withdraw".equals(transactionType)) {
-            if (account.getBalance() < amount) {
-                throw new InsufficientBalanceException("Insufficient Balance !!!");
-            }
-            account.setBalance(account.getBalance() - amount);
-            transactionService.saveTransaction(accountNumber, "withdraw", amount, "Withdrawn from account");
-        } else {
-            throw new IllegalArgumentException("Invalid transaction type.");
-        }
-
-        accountRepository.save(account);
+        transactionService.depositWithdrawal(depoWithdrawRequest);
         return ResponseEntity.ok().build();
     }
 

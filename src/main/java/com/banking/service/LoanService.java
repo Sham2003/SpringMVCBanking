@@ -5,10 +5,13 @@ import ai.onnxruntime.OrtException;
 import com.banking.dto.loan.LoanForm;
 import com.banking.model.Loan;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface LoanService {
-    Loan processApplication(LoanForm form) throws OrtException;
+    String processApplication(LoanForm form) throws OrtException;
 
     Optional<Loan> findById(String loanId);
+
+    List<String> getUserLoans(String email);
 }

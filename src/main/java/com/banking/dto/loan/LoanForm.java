@@ -9,7 +9,7 @@ import lombok.Data;
 public class LoanForm {
 
     @NotBlank
-    private String loanId;
+    private String email;
 
     @Min(0) @Max(10)
     private int noOfDependents;

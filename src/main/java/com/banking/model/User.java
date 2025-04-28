@@ -26,11 +26,7 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "otp")
-    private String otp;  // For storing OTP during password reset
-
     private int failedLoginAttempts;
     private LocalDateTime accountLockedUntil;
-
 
 }

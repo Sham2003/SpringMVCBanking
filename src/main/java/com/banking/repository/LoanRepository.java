@@ -3,6 +3,8 @@ package com.banking.repository;
 
 import com.banking.model.Loan;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.*;
 /**
@@ -12,10 +14,6 @@ import java.util.*;
 @Repository
 public interface LoanRepository extends JpaRepository<Loan, String> {
 
-
-       List<Loan> findByApprovalStatus(String status);
-       boolean existsByLoanId(String loanId);
-    
-   
-
+       @Query("SELECT l FROM Loan l WHERE l.user.email = :email")
+       List<Loan> findLoansByUserEmail(@Param("email") String email);
 }

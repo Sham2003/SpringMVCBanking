@@ -1,6 +1,7 @@
 package com.banking.service;
 
 import com.banking.dto.auth.RegisterAccountDTO;
+import com.banking.dto.auth.RegisterResponse;
 import com.banking.exceptions.exps.AuthExceptions;
 import com.banking.model.Account;
 import com.banking.model.PendingAccount;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -19,12 +21,15 @@ public class AccountServiceImpl implements AccountService {
     private final PendingAccountRepository pendingAccountRepository;
     private final AccountRepository accountRepository;
     private final UserService userService;
+    private final OtpService otpService;
+
     // Constructor injection of AccountRepository
     @Autowired
-    public AccountServiceImpl(PendingAccountRepository pendingAccountRepository, AccountRepository accountRepository, UserService userService) {
+    public AccountServiceImpl(PendingAccountRepository pendingAccountRepository, AccountRepository accountRepository, UserService userService, OtpService otpService) {
         this.pendingAccountRepository = pendingAccountRepository;
         this.accountRepository = accountRepository;
         this.userService = userService;
+        this.otpService = otpService;
     }
 
     @Override
@@ -37,8 +42,13 @@ public class AccountServiceImpl implements AccountService {
         return OtpService.generateOtp();
     }
 
+    private boolean isInvalidPassword(String password) {
+        String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z\\d]).{6,}$";
+        return password == null || !password.matches(pattern);
+    }
+
     @Override
-    public void createPendingAccount(RegisterAccountDTO newAccount) {
+    public String createPendingAccount(RegisterAccountDTO newAccount) {
         LocalDate dateOfBirth = LocalDate.parse(newAccount.getDob());
         LocalDate today = LocalDate.now();
         int age = today.getYear() - dateOfBirth.getYear();
@@ -48,19 +58,39 @@ public class AccountServiceImpl implements AccountService {
             throw new SecurityException("Age must be at least 18");
         }
 
-        String otp = generateOtp();
-
+        UUID reqId = otpService.makeActivationCodeRequest(newAccount.getEmail());
         PendingAccount pendingAccount = new PendingAccount();
         pendingAccount.setName(newAccount.getName());
         pendingAccount.setEmail(newAccount.getEmail());
         pendingAccount.setMobileNumber(newAccount.getMobileNumber());
         pendingAccount.setDob(dateOfBirth);
         pendingAccount.setAccountType(newAccount.getAccountType());
-        pendingAccount.setOtp(otp);
         pendingAccount.setPassword(newAccount.getPassword());
 
         pendingAccountRepository.save(pendingAccount);
 
+        return reqId.toString();
+
+    }
+
+    @Override
+    public RegisterResponse registerAccount(RegisterAccountDTO registerAccountDTO) {
+
+        if (getAccountByEmail(registerAccountDTO.getEmail()) != null) {
+            throw new AuthExceptions.AccountExistsException("Account already exists with email: " + registerAccountDTO.getEmail());
+        }
+
+        if (!registerAccountDTO.getPassword().equals(registerAccountDTO.getConfirmPassword())) {
+            throw new AuthExceptions.InvalidPasswordException("Passwords do not match");
+        }
+
+
+        if (isInvalidPassword(registerAccountDTO.getPassword())) {
+            throw new AuthExceptions.WeakPasswordException("Password must be at least 6 characters long, contain one uppercase letter, one lowercase letter, one digit, and one special character.");
+        }
+        String otpReqId = createPendingAccount(registerAccountDTO);
+
+        return new RegisterResponse(null,registerAccountDTO.getEmail(),registerAccountDTO.getName(),otpReqId);
     }
 
     @Override
@@ -69,11 +99,13 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public String verifyPendingAccount(String email) {
+    public RegisterResponse verifyPendingAccount(String email, String otpReqId, String otp) {
         PendingAccount pendingAccount = findPendingAccount(email);
         if (pendingAccount == null) {
-            throw new AuthExceptions.AccountNotFoundException("");
+            throw new AuthExceptions.AccountNotFoundException("Pending Account not found with email: " + email);
         }
+        otpService.verifyOtp(email,otpReqId,otp);
+
         String accountNumber = "ACC" + String.format("%010d", new Random().nextInt(1_000_000_000));
         Account account = pendingAccount.checkout();
         account.setAccountNumber(accountNumber);
@@ -84,6 +116,8 @@ public class AccountServiceImpl implements AccountService {
         userService.saveUser(newUser);
         accountRepository.save(account);
         pendingAccountRepository.delete(pendingAccount);
-        return accountNumber;
+
+        return new RegisterResponse(accountNumber,email,pendingAccount.getName(), null);
     }
+
 }

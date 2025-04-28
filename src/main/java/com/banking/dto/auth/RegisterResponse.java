@@ -9,4 +9,5 @@ public class RegisterResponse {
     private String accountNumber;
     private String email;
     private String name;
+    private String otpReqId;
 }

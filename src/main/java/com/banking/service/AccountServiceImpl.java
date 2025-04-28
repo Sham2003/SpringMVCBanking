@@ -91,7 +91,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public String initTransactionPassword(String email,String accountNumber){
-        Account account = getAccountByEmail(accountNumber);
+        Account account = accountRepository.findByAccountNumber(accountNumber);
         if (account == null) {
             throw new AuthExceptions.AccountNotFoundException("Account not found : " + accountNumber);
         }
@@ -100,7 +100,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void changeTransactionPassword(String email,String accountNumber, String otpReqId, String otp, String transactionPassword) {
-        Account account = getAccountByEmail(accountNumber);
+        Account account = accountRepository.findByAccountNumber(accountNumber);
         if (account == null) {
             throw new AuthExceptions.AccountNotFoundException("Account not found : " + accountNumber);
         }

@@ -3,7 +3,9 @@ package com.banking.service;
 import com.banking.dto.auth.LoginDto;
 import com.banking.dto.auth.LoginResponse;
 import com.banking.dto.auth.ResetPasswordDTO;
+import com.banking.dto.transaction.AccountInfo;
 import com.banking.exceptions.exps.AuthExceptions;
+import com.banking.model.Account;
 import com.banking.model.User;
 import com.banking.repository.AccountRepository;
 import com.banking.repository.UserRepository;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.security.auth.login.AccountLockedException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -124,4 +127,22 @@ public class UserServiceImpl implements UserService {
         saveUser(existingUser);
         return LoginResponse.builder().email(loginDto.getEmail()).build();
     }
+
+    @Override
+    public List<AccountInfo> getAccountDetails(String email){
+        User user = findByEmail(email);
+        if(user == null) {
+            throw new AuthExceptions.UserNotFoundException("User not found.");
+        }
+
+        return user.getAccounts().stream().map(AccountInfo::new).toList();
+    }
+
+    @Override
+    public List<String> getAccountNumbers(String email){
+        List<AccountInfo> accounts = getAccountDetails(email);
+
+        return accounts.stream().map(AccountInfo::getAccountNumber).toList();
+    }
+
 }

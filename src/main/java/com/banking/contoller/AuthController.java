@@ -34,6 +34,7 @@ public class AuthController {
     @PostMapping("/initTransactionPassword")
     public ResponseEntity<String> initChangeTransactionPassword(@RequestParam("email") String email,
                                                        @RequestParam("accountNumber") String accountNumber) {
+        System.out.println("initTransactionPassword");
         String otpReqId = accountService.initTransactionPassword(email,accountNumber);
         return ResponseEntity.ok().body(otpReqId);
     }
@@ -47,5 +48,7 @@ public class AuthController {
         accountService.changeTransactionPassword(email,accountNumber,otpReqId,otp,transactionPassword);
         return ResponseEntity.ok().build();
     }
+
+
 
 }

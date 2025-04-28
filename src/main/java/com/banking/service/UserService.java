@@ -2,9 +2,11 @@ package com.banking.service;
 import com.banking.dto.auth.LoginDto;
 import com.banking.dto.auth.LoginResponse;
 import com.banking.dto.auth.ResetPasswordDTO;
+import com.banking.dto.transaction.AccountInfo;
 import com.banking.model.User;
 
 import javax.security.auth.login.AccountLockedException;
+import java.util.List;
 
 public interface UserService {
     User findByEmail(String email);
@@ -13,5 +15,8 @@ public interface UserService {
     void verifyPasswordReset(ResetPasswordDTO resetPasswordDTO);
     LoginResponse loginCheck(LoginDto loginDto) throws AccountLockedException;
 
+    List<AccountInfo> getAccountDetails(String email);
+
+    List<String> getAccountNumbers(String email);
 }
 

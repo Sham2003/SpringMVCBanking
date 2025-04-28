@@ -18,7 +18,8 @@ public class OtpRequest {
     public enum OTP_TYPE {
         PASSWORD_RESET,
         ACTIVATION_CODE,
-        BANK_TRANSFER, TRANSACTION_PASSWORD_CHANGE,
+        BANK_TRANSFER,
+        TRANSACTION_PASSWORD_CHANGE,
     }
 
     public enum OTP_STATUS {

@@ -2,13 +2,10 @@ package com.banking.contoller;
 
 
 import com.banking.dto.transaction.*;
-import com.banking.exceptions.exps.AuthExceptions.*;
 import com.banking.exceptions.exps.TransactionExceptions.InsufficientBalanceException;
-import com.banking.model.Account;
 import com.banking.model.Transaction;
 import com.banking.service.TransactionService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import com.banking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,25 +18,19 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @Autowired
+    private UserService userService;
 
-    @PostMapping("/view-account")
-    public ResponseEntity<AccountInfo> viewAccountDetails(@RequestParam String email) {
-        String jpql = "SELECT u, a FROM User u LEFT JOIN Account a ON u.email = a.email WHERE u.email = :email";
-        List<Object[]> results = entityManager.createQuery(jpql, Object[].class)
-                .setParameter("email", email)
-                .getResultList();
+    @PostMapping("/accountDetails")
+    public ResponseEntity<List<AccountInfo>> viewAccountDetails(@RequestParam String email) {
+        List<AccountInfo> response = userService.getAccountDetails(email);
+        return ResponseEntity.ok(response);
+    }
 
-        if (results.isEmpty()) {
-            throw new UserNotFoundException("User not found");
-        }
-
-        Object[] result = results.get(0);
-        Account account = (Account) result[1];
-
-
-        return ResponseEntity.ok(new AccountInfo(account));
+    @GetMapping("/accountNumbers")
+    public ResponseEntity<List<String>> getAccountNumbers(@RequestParam String email) {
+        List<String> response = userService.getAccountNumbers(email);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/transaction-history",produces = MediaType.APPLICATION_JSON_VALUE)

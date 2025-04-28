@@ -5,7 +5,6 @@ import com.banking.dto.auth.LoginResponse;
 import com.banking.dto.auth.ResetPasswordDTO;
 import com.banking.dto.transaction.AccountInfo;
 import com.banking.exceptions.exps.AuthExceptions;
-import com.banking.model.Account;
 import com.banking.model.User;
 import com.banking.repository.AccountRepository;
 import com.banking.repository.UserRepository;

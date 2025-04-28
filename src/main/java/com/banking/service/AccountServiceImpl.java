@@ -38,10 +38,6 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findByEmail(email);
     }
 
-    public static String generateOtp() {
-        return OtpService.generateOtp();
-    }
-
     private boolean isInvalidPassword(String password) {
         String pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z\\d]).{6,}$";
         return password == null || !password.matches(pattern);
@@ -94,6 +90,26 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public String initTransactionPassword(String email,String accountNumber){
+        Account account = getAccountByEmail(accountNumber);
+        if (account == null) {
+            throw new AuthExceptions.AccountNotFoundException("Account not found : " + accountNumber);
+        }
+        return otpService.makeTransactionPasswordRequest(email,accountNumber).toString();
+    }
+
+    @Override
+    public void changeTransactionPassword(String email,String accountNumber, String otpReqId, String otp, String transactionPassword) {
+        Account account = getAccountByEmail(accountNumber);
+        if (account == null) {
+            throw new AuthExceptions.AccountNotFoundException("Account not found : " + accountNumber);
+        }
+
+        otpService.verifyOtp(email,otpReqId,otp);
+        account.setTransactionPassword(transactionPassword);
+    }
+
+    @Override
     public PendingAccount findPendingAccount(String email) {
         return pendingAccountRepository.findByEmail(email);
     }
@@ -107,14 +123,20 @@ public class AccountServiceImpl implements AccountService {
         otpService.verifyOtp(email,otpReqId,otp);
 
         String accountNumber = "ACC" + String.format("%010d", new Random().nextInt(1_000_000_000));
-        Account account = pendingAccount.checkout();
-        account.setAccountNumber(accountNumber);
         User newUser = new User();
-        newUser.setEmail(account.getEmail());
+        newUser.setEmail(pendingAccount.getEmail());
         newUser.setPassword(pendingAccount.getPassword());
         newUser.setName(pendingAccount.getName());
+
+
+        Account account = pendingAccount.checkout();
+        account.setAccountNumber(accountNumber);
+        account.setUser(newUser);
+        newUser.getAccounts().add(account);
+
         userService.saveUser(newUser);
-        accountRepository.save(account);
+
+        //accountRepository.save(account);
         pendingAccountRepository.delete(pendingAccount);
 
         return new RegisterResponse(accountNumber,email,pendingAccount.getName(), null);

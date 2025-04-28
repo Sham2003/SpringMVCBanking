@@ -73,9 +73,7 @@ public class LoanServiceImpl implements LoanService {
     @Override
     public List<String> getUserLoans(String email) {
         List<String> loans = new ArrayList<>();
-        loanRepository.findLoansByUserEmail(email).forEach(loan -> {
-            loans.add(loan.getLoanId());
-        });
+        loanRepository.findLoansByUserEmail(email).forEach(loan -> loans.add(loan.getLoanId()));
         return loans;
     }
 }

@@ -16,4 +16,8 @@ public interface AccountService {
     RegisterResponse verifyPendingAccount(String email, String otpReqId, String otp);
 
     RegisterResponse registerAccount(RegisterAccountDTO registerAccountDTO);
+
+    void changeTransactionPassword(String email,String accountNumber, String otpReqId, String otp, String transactionPassword);
+
+    String initTransactionPassword(String email, String accountNumber);
 }

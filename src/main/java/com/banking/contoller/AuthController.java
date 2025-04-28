@@ -1,8 +1,6 @@
 package com.banking.contoller;
 
 import com.banking.dto.auth.*;
-import com.banking.exceptions.exps.AuthExceptions.*;
-import com.banking.model.PendingAccount;
 import com.banking.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,6 +29,23 @@ public class AuthController {
                                           @RequestParam("otp") String otp) {
         RegisterResponse response = accountService.verifyPendingAccount(email,otpReqId,otp);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/initTransactionPassword")
+    public ResponseEntity<String> initChangeTransactionPassword(@RequestParam("email") String email,
+                                                       @RequestParam("accountNumber") String accountNumber) {
+        String otpReqId = accountService.initTransactionPassword(email,accountNumber);
+        return ResponseEntity.ok().body(otpReqId);
+    }
+
+    @PostMapping("/changeTransactionPassword")
+    public ResponseEntity<?> changeTransactionPassword(@RequestParam("email") String email,
+                                                       @RequestParam("accountNumber") String accountNumber,
+                                            @RequestParam("otpReqId") String otpReqId,
+                                            @RequestParam("otp") String otp,
+                                            @RequestParam("transactionPassword") String transactionPassword) {
+        accountService.changeTransactionPassword(email,accountNumber,otpReqId,otp,transactionPassword);
+        return ResponseEntity.ok().build();
     }
 
 }

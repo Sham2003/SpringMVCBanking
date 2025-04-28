@@ -6,7 +6,6 @@ import com.banking.exceptions.exps.AuthExceptions.*;
 import com.banking.exceptions.exps.TransactionExceptions.InsufficientBalanceException;
 import com.banking.model.Account;
 import com.banking.model.Transaction;
-import com.banking.repository.AccountRepository;
 import com.banking.service.TransactionService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

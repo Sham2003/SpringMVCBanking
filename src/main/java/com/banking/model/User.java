@@ -1,6 +1,8 @@
 package com.banking.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,5 +30,8 @@ public class User {
 
     private int failedLoginAttempts;
     private LocalDateTime accountLockedUntil;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<Account> accounts = new ArrayList<>();
 
 }

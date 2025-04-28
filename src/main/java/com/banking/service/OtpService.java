@@ -115,4 +115,17 @@ public class OtpService {
         //sendOtpEmail(email, otpRequest.getOtp());
         return otpRequest.getId();
     }
+
+    public UUID makeTransactionPasswordRequest(String email, String accountNumber) {
+        OtpRequest otpRequest = new OtpRequest();
+        otpRequest.setEmail(email);
+        otpRequest.setOtp(generateOtp());
+        otpRequest.setType(OtpRequest.OTP_TYPE.TRANSACTION_PASSWORD_CHANGE);
+        otpRequest.setStatus(OtpRequest.OTP_STATUS.ONGOING);
+        otpRequest.setMessage("CHANGE TRANSACTION PASSWORD REQUEST FOR " + accountNumber);
+        otpRequestRepository.save(otpRequest);
+        System.out.println("Sent OTP to " + email + " OTP :" + otpRequest.getOtp());
+        //sendOtpEmail(email, otpRequest.getOtp());
+        return otpRequest.getId();
+    }
 }

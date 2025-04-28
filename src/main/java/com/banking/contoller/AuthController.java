@@ -23,6 +23,13 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping(value = "/create-another-account",produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RegisterResponse> createAccount(@RequestParam("email") String email,
+                                                          @RequestParam("accountType") String accountType) {
+        RegisterResponse response = accountService.createAnotherAccount(email,accountType);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/verify-activation-code")
     public ResponseEntity<RegisterResponse> verifyForgotPasswordOtp(@RequestParam("email") String email,
                                           @RequestParam("otpReqId") String otpReqId,
@@ -48,6 +55,8 @@ public class AuthController {
         accountService.changeTransactionPassword(email,accountNumber,otpReqId,otp,transactionPassword);
         return ResponseEntity.ok().build();
     }
+
+
 
 
 

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -87,6 +88,32 @@ public class AccountServiceImpl implements AccountService {
         String otpReqId = createPendingAccount(registerAccountDTO);
 
         return new RegisterResponse(null,registerAccountDTO.getEmail(),registerAccountDTO.getName(),otpReqId);
+    }
+
+    @Override
+    public RegisterResponse createAnotherAccount(String email,String accountType) {
+        User user = userService.findByEmail(email);
+        if(user == null) {
+            throw new AuthExceptions.UserNotFoundException("User not found");
+        }
+        if(!List.of("savings","current").contains(accountType)) {
+            throw new IllegalArgumentException("Account type must be savings or current");
+        }
+        String accountNumber = "ACC" + String.format("%010d", new Random().nextInt(1_000_000_000));
+        Account existingAccount = user.getAccounts().get(0);
+        Account account = new Account();
+        account.setAccountNumber(accountNumber);
+        account.setName(existingAccount.getName());
+        account.setEmail(existingAccount.getEmail());
+        account.setMobileNumber(existingAccount.getMobileNumber());
+        account.setDob(existingAccount.getDob());
+        account.setAccountType(accountType);
+        account.setBalance(0.0);
+        account.setUser(user);
+
+        user.getAccounts().add(account);
+        userService.saveUser(user);
+        return new RegisterResponse(accountNumber,email,user.getName(),null);
     }
 
     @Override

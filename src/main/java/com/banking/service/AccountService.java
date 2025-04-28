@@ -17,6 +17,8 @@ public interface AccountService {
 
     RegisterResponse registerAccount(RegisterAccountDTO registerAccountDTO);
 
+    RegisterResponse createAnotherAccount(String email,String accountType);
+
     void changeTransactionPassword(String email,String accountNumber, String otpReqId, String otp, String transactionPassword);
 
     String initTransactionPassword(String email, String accountNumber);

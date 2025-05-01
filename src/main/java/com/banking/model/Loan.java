@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "loans")
 @Data
@@ -38,4 +40,5 @@ public class Loan {
     private double bankAssetValue;
     private String approvalStatus;
 
+    private LocalDateTime createdOn = LocalDateTime.now();
 }

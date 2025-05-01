@@ -3,15 +3,14 @@ package com.banking.service;
 
 import ai.onnxruntime.OrtException;
 import com.banking.dto.loan.LoanForm;
-import com.banking.model.Loan;
+import com.banking.dto.loan.LoanResponse;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface LoanService {
     String processApplication(LoanForm form) throws OrtException;
 
-    Optional<Loan> findById(String loanId);
+    LoanResponse findById(String loanId);
 
-    List<String> getUserLoans(String email);
+    List<LoanResponse> getUserLoans();
 }

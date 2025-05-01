@@ -3,6 +3,7 @@ package com.banking.service;
 
 import com.banking.dto.auth.RegisterAccountDTO;
 import com.banking.dto.auth.RegisterResponse;
+import com.banking.dto.transaction.ResetTpwdDTO;
 import com.banking.model.Account;
 import com.banking.model.PendingAccount;
 
@@ -19,9 +20,9 @@ public interface AccountService {
 
     RegisterResponse registerAccount(RegisterAccountDTO registerAccountDTO);
 
-    RegisterResponse createAnotherAccount(String email,String accountType);
+    RegisterResponse createAnotherAccount(String accountType);
 
-    void changeTransactionPassword(String email,String accountNumber, String otpReqId, String otp, String transactionPassword);
+    void changeTransactionPassword(ResetTpwdDTO resetPasswordDTO);
 
-    String initTransactionPassword(String email, String accountNumber);
+    String initTransactionPassword(String accountNumber);
 }

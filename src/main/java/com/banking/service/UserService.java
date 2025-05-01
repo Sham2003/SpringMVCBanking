@@ -5,7 +5,7 @@ import com.banking.dto.auth.ResetPasswordDTO;
 import com.banking.dto.transaction.AccountInfo;
 import com.banking.model.User;
 
-import javax.security.auth.login.AccountLockedException;
+import java.security.GeneralSecurityException;
 import java.util.List;
 
 public interface UserService {
@@ -13,10 +13,10 @@ public interface UserService {
     void saveUser(User user);
     String initiatePasswordReset(String email) ;
     void verifyPasswordReset(ResetPasswordDTO resetPasswordDTO);
-    LoginResponse loginCheck(LoginDto loginDto) throws AccountLockedException;
+    LoginResponse loginCheck(LoginDto loginDto) throws GeneralSecurityException;
 
-    List<AccountInfo> getAccountDetails(String email);
+    List<AccountInfo> getAccountDetails();
 
-    List<String> getAccountNumbers(String email);
+    List<String> getAccountNumbers();
 }
 

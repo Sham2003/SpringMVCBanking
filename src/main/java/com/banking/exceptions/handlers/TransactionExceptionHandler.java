@@ -24,7 +24,33 @@ public class TransactionExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.INVALID_FIELD.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.INVALID_FIELD.getDescription())
+                                .serverErrorDescription(ErrorCodes.INVALID_FIELD.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(NoTransactionPasswordException.class)
+    public ResponseEntity<ExceptionResponse> handleException(NoTransactionPasswordException exp) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(
+                        ExceptionResponse.builder()
+                                .serverErrorCode(ErrorCodes.NO_TRANSACTION_PASSWORD.getCode())
+                                .serverErrorDescription(ErrorCodes.NO_TRANSACTION_PASSWORD.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(InvalidTransactionPasswordException.class)
+    public ResponseEntity<ExceptionResponse> handleException(InvalidTransactionPasswordException exp) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(
+                        ExceptionResponse.builder()
+                                .serverErrorCode(ErrorCodes.INVALID_TRANSACTION_PASSWORD.getCode())
+                                .serverErrorDescription(ErrorCodes.INVALID_TRANSACTION_PASSWORD.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -37,7 +63,7 @@ public class TransactionExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.INSUFFICIENT_FUNDS.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.INSUFFICIENT_FUNDS.getDescription())
+                                .serverErrorDescription(ErrorCodes.INSUFFICIENT_FUNDS.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -51,7 +77,7 @@ public class TransactionExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.LOAN_PENDING.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.LOAN_PENDING.getDescription())
+                                .serverErrorDescription(ErrorCodes.LOAN_PENDING.getDescription())
                                 .error("Couldn't approve the transaction")
                                 .build()
                 );
@@ -66,7 +92,7 @@ public class TransactionExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.INVALID_FIELD.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.INVALID_FIELD.getDescription())
+                                .serverErrorDescription(ErrorCodes.INVALID_FIELD.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );

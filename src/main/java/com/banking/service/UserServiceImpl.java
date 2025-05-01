@@ -9,31 +9,41 @@ import com.banking.model.Account;
 import com.banking.model.User;
 import com.banking.repository.AccountRepository;
 import com.banking.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.login.AccountLockedException;
+import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private OtpService otpService;
+    private final OtpService otpService;
 
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
+
+    private final JwtService jwtService;
+
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmail(email).orElseThrow(() -> new AuthExceptions.UserNotFoundException("User not found"));
     }
 
     @Override
@@ -79,12 +89,12 @@ public class UserServiceImpl implements UserService {
             throw new AuthExceptions.UserNotFoundException("User not found.");
         }
 
-        user.setPassword(newPassword);
+        user.setPassword(passwordEncoder.encode(newPassword));
         saveUser(user);
     }
 
     @Override
-    public LoginResponse loginCheck(LoginDto loginDto) throws AccountLockedException {
+    public LoginResponse loginCheck(LoginDto loginDto) throws GeneralSecurityException {
         User existingUser = findByEmail(loginDto.getEmail());
 
         if (existingUser == null) {
@@ -101,7 +111,7 @@ public class UserServiceImpl implements UserService {
             throw new AccountLockedException("Account is locked. Try again after: " + existingUser.getAccountLockedUntil());
         }
 
-        if (!existingUser.getPassword().equals(loginDto.getPassword())) {
+        if (!passwordEncoder.matches(loginDto.getPassword(), existingUser.getPassword())) {
             int attempts = existingUser.getFailedLoginAttempts() + 1;
             existingUser.setFailedLoginAttempts(attempts);
 
@@ -111,7 +121,10 @@ public class UserServiceImpl implements UserService {
                 saveUser(existingUser);
 
                 try {
-                    otpService.sendAccountLockedEmail(existingUser.getEmail(), lockUntil);
+                    Map<String,Object> parameters = new HashMap<>();
+                    parameters.put("email", existingUser.getEmail());
+                    parameters.put("lockUntil", lockUntil);
+                    otpService.sendEmail(existingUser.getEmail(), OtpService.EMAIL_TYPE.ACCOUNT_LOCKED,parameters);
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
@@ -126,24 +139,41 @@ public class UserServiceImpl implements UserService {
         existingUser.setFailedLoginAttempts(0);
         existingUser.setAccountLockedUntil(null);
         saveUser(existingUser);
-        return LoginResponse.builder().email(loginDto.getEmail()).build();
+        jwtService.revokeAllUserTokens(existingUser);
+
+
+        return jwtService.generateToken(existingUser);
     }
 
+
+
     @Override
-    public List<AccountInfo> getAccountDetails(String email){
-        User user = findByEmail(email);
+    @Transactional
+    public List<AccountInfo> getAccountDetails(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        User user = (User) authentication.getPrincipal();
         if(user == null) {
             throw new AuthExceptions.UserNotFoundException("User not found.");
         }
+
+        Hibernate.initialize(user.getAccounts());
 
         return user.getAccounts().stream().map(AccountInfo::new).toList();
     }
 
     @Override
-    public List<String> getAccountNumbers(String email){
-        List<AccountInfo> accounts = getAccountDetails(email);
+    public List<String> getAccountNumbers(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        return accounts.stream().map(AccountInfo::getAccountNumber).toList();
+        User user = (User) authentication.getPrincipal();
+        if(user == null) {
+            throw new AuthExceptions.UserNotFoundException("User not found.");
+        }
+
+        Hibernate.initialize(user.getAccounts());
+
+        return user.getAccounts().stream().map(Account::getAccountNumber).toList();
     }
 
 }

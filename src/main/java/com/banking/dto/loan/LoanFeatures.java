@@ -26,7 +26,6 @@ public class LoanFeatures implements Serializable {
 
 
     public LoanFeatures(LoanForm form) {
-        // 1) Define your mappings (ignore np.str_, just plain Strings)
         Map<String, Integer> educationMap = Map.of(
                 "Graduate",      0,
                 "Not Graduate",  1
@@ -36,9 +35,7 @@ public class LoanFeatures implements Serializable {
                 "Yes",  1
         );
 
-        // 2) Copy & convert
         this.noOfDependents       = form.getNoOfDependents();
-        // trim() to remove any leading/trailing spaces
         this.education            = educationMap.getOrDefault(form.getEducation().trim(),      -1);
         this.selfEmployed         = selfEmployedMap.getOrDefault(form.getSelfEmployed().trim(), -1);
         this.incomeAnnum          = (float) form.getIncomeAnnum();

@@ -2,41 +2,46 @@ package com.banking.service;
 
 import com.banking.dto.auth.RegisterAccountDTO;
 import com.banking.dto.auth.RegisterResponse;
+import com.banking.dto.transaction.ResetTpwdDTO;
 import com.banking.exceptions.exps.AuthExceptions;
 import com.banking.model.Account;
 import com.banking.model.PendingAccount;
 import com.banking.model.User;
 import com.banking.repository.AccountRepository;
 import com.banking.repository.PendingAccountRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
     private final PendingAccountRepository pendingAccountRepository;
     private final AccountRepository accountRepository;
     private final UserService userService;
     private final OtpService otpService;
+    private final PasswordEncoder passwordEncoder;
 
-    // Constructor injection of AccountRepository
-    @Autowired
-    public AccountServiceImpl(PendingAccountRepository pendingAccountRepository, AccountRepository accountRepository, UserService userService, OtpService otpService) {
-        this.pendingAccountRepository = pendingAccountRepository;
-        this.accountRepository = accountRepository;
-        this.userService = userService;
-        this.otpService = otpService;
-    }
 
     @Override
     public List<Account> getAccountByEmail(String email) {
         // Fetch the account by email
         return accountRepository.findByEmail(email);
+    }
+
+    private static User getAuthenticatedUser(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (User) authentication.getPrincipal();
     }
 
     private boolean isInvalidPassword(String password) {
@@ -62,7 +67,7 @@ public class AccountServiceImpl implements AccountService {
         pendingAccount.setMobileNumber(newAccount.getMobileNumber());
         pendingAccount.setDob(dateOfBirth);
         pendingAccount.setAccountType(newAccount.getAccountType());
-        pendingAccount.setPassword(newAccount.getPassword());
+        pendingAccount.setPassword(passwordEncoder.encode(newAccount.getPassword()));
 
         pendingAccountRepository.save(pendingAccount);
 
@@ -72,7 +77,6 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public RegisterResponse registerAccount(RegisterAccountDTO registerAccountDTO) {
-
 
         if (!getAccountByEmail(registerAccountDTO.getEmail()).isEmpty()) {
             throw new AuthExceptions.AccountExistsException("Account already exists with email: " + registerAccountDTO.getEmail());
@@ -92,8 +96,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public RegisterResponse createAnotherAccount(String email,String accountType) {
-        User user = userService.findByEmail(email);
+    public RegisterResponse createAnotherAccount(String accountType) {
+        User user = getAuthenticatedUser();
         if(user == null) {
             throw new AuthExceptions.UserNotFoundException("User not found");
         }
@@ -114,27 +118,35 @@ public class AccountServiceImpl implements AccountService {
 
         user.getAccounts().add(account);
         userService.saveUser(user);
-        return new RegisterResponse(accountNumber,email,user.getName(),null);
+        return new RegisterResponse(accountNumber,user.getEmail(),user.getName(),null);
+    }
+
+
+
+    @Override
+    public String initTransactionPassword(String accountNumber){
+        User user = getAuthenticatedUser();
+        boolean accountExists = user.getAccounts().stream().map(Account::getAccountNumber).anyMatch(accountNumber::equals);
+        if (!accountExists) {
+            throw new AuthExceptions.AccountNotFoundException("Account not found : " + accountNumber);
+        }
+        return otpService.makeTransactionPasswordRequest(user.getEmail(),accountNumber).toString();
     }
 
     @Override
-    public String initTransactionPassword(String email,String accountNumber){
-        Account account = accountRepository.findByAccountNumber(accountNumber);
-        if (account == null) {
-            throw new AuthExceptions.AccountNotFoundException("Account not found : " + accountNumber);
-        }
-        return otpService.makeTransactionPasswordRequest(email,accountNumber).toString();
-    }
-
-    @Override
-    public void changeTransactionPassword(String email,String accountNumber, String otpReqId, String otp, String transactionPassword) {
-        Account account = accountRepository.findByAccountNumber(accountNumber);
-        if (account == null) {
-            throw new AuthExceptions.AccountNotFoundException("Account not found : " + accountNumber);
+    public void changeTransactionPassword(ResetTpwdDTO dto) {
+        User user = getAuthenticatedUser();
+        Optional<Account> account = user.getAccounts()
+                .stream()
+                .filter(account1 -> account1.getAccountNumber().equals(dto.getAccountNumber()))
+                .findFirst();
+        if (account.isEmpty()) {
+            throw new AuthExceptions.AccountNotFoundException("Account not found : " + dto.getAccountNumber());
         }
 
-        otpService.verifyOtp(email,otpReqId,otp);
-        account.setTransactionPassword(transactionPassword);
+        otpService.verifyOtp(user.getEmail(),dto.getOtpReqId(), dto.getOtp());
+        account.get().setTransactionPassword(dto.getTransactionPassword());
+        accountRepository.save(account.get());
     }
 
     @Override
@@ -155,7 +167,7 @@ public class AccountServiceImpl implements AccountService {
         newUser.setEmail(pendingAccount.getEmail());
         newUser.setPassword(pendingAccount.getPassword());
         newUser.setName(pendingAccount.getName());
-
+        newUser.setValidatedAt(LocalDateTime.now());
 
         Account account = pendingAccount.checkout();
         account.setAccountNumber(accountNumber);

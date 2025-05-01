@@ -37,5 +37,10 @@ public class AuthExceptions {
         public NoSuchRequestException(String message) { super(message); }
     }
 
+    public static class LoanDetailNotFoundException extends RuntimeException {
+        public LoanDetailNotFoundException(String s) {
+            super(s);
+        }
+    }
 }
 

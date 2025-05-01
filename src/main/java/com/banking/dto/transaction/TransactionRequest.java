@@ -7,4 +7,5 @@ public class TransactionRequest {
     String senderAccountNumber;
     String receiverAccountNumber;
     double amount;
+    String transactionPassword;
 }

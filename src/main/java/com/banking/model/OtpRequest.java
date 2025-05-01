@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.UUID;
 
 @Entity
@@ -40,4 +41,32 @@ public class OtpRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    public boolean isExpired(){
+        return createdOn.plusMinutes(30).isBefore(LocalDateTime.now()) || getStatus() != OtpRequest.OTP_STATUS.ONGOING;
+    }
+
+    public boolean checkOtp(String otp) {
+        return this.otp.equals(otp);
+    }
+
+    public boolean checkEmail(String email) {
+        return this.email.equals(email);
+    }
+
+    public static String generateOtp() {
+        Random random = new Random();
+        int otp = 100000 + random.nextInt(900000); // Always 6 digits
+        return String.valueOf(otp);
+    }
+
+    public static OtpRequest forEmail(String email, OTP_TYPE type, String message) {
+        OtpRequest otpRequest = new OtpRequest();
+        otpRequest.email = email;
+        otpRequest.otp = generateOtp();
+        otpRequest.message = message;
+        otpRequest.type = type;
+        otpRequest.status = OtpRequest.OTP_STATUS.ONGOING;
+        return otpRequest;
+    }
 }

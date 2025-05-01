@@ -4,6 +4,8 @@ package com.banking.exceptions.handlers;
 import com.banking.exceptions.ErrorCodes;
 import com.banking.exceptions.ExceptionResponse;
 import com.banking.exceptions.exps.AuthExceptions.*;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,7 +24,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.ACCOUNT_EXISTS.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.ACCOUNT_EXISTS.getDescription())
+                                .serverErrorDescription(ErrorCodes.ACCOUNT_EXISTS.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -35,7 +37,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.NEW_PASSWORD_DOES_NOT_MATCH.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.NEW_PASSWORD_DOES_NOT_MATCH.getDescription())
+                                .serverErrorDescription(ErrorCodes.NEW_PASSWORD_DOES_NOT_MATCH.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -48,7 +50,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.INVALID_OTP.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.INVALID_OTP.getDescription())
+                                .serverErrorDescription(ErrorCodes.INVALID_OTP.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -61,7 +63,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.EXPIRED_OTP.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.EXPIRED_OTP.getDescription())
+                                .serverErrorDescription(ErrorCodes.EXPIRED_OTP.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -74,7 +76,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.NO_SUCH_REQUEST.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.NO_SUCH_REQUEST.getDescription())
+                                .serverErrorDescription(ErrorCodes.NO_SUCH_REQUEST.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -87,7 +89,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.WEAK_PASSWORD.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.WEAK_PASSWORD.getDescription())
+                                .serverErrorDescription(ErrorCodes.WEAK_PASSWORD.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -100,7 +102,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.INCORRECT_AGE.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.INCORRECT_AGE.getDescription())
+                                .serverErrorDescription(ErrorCodes.INCORRECT_AGE.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -113,7 +115,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.USER_NOT_FOUND.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.USER_NOT_FOUND.getDescription())
+                                .serverErrorDescription(ErrorCodes.USER_NOT_FOUND.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -126,7 +128,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.ACCOUNT_NOT_FOUND.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.ACCOUNT_NOT_FOUND.getDescription())
+                                .serverErrorDescription(ErrorCodes.ACCOUNT_NOT_FOUND.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -139,7 +141,7 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.ACCOUNT_LOCKED.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.ACCOUNT_LOCKED.getDescription())
+                                .serverErrorDescription(ErrorCodes.ACCOUNT_LOCKED.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
@@ -153,13 +155,24 @@ public class AuthExceptionHandler {
                 .body(
                         ExceptionResponse.builder()
                                 .serverErrorCode(ErrorCodes.BAD_CREDENTIALS.getCode())
-                                .serverErrorDescrtiption(ErrorCodes.BAD_CREDENTIALS.getDescription())
+                                .serverErrorDescription(ErrorCodes.BAD_CREDENTIALS.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );
     }
 
-
-
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ExceptionResponse> handleException(JwtException exp) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        exceptionResponse.setError(exp.getMessage());
+        if (exp instanceof ExpiredJwtException ) {
+            exceptionResponse.setServerErrorCode(ErrorCodes.EXPIRED_SESSION.getCode());
+            exceptionResponse.setServerErrorDescription(ErrorCodes.EXPIRED_SESSION.getDescription());
+        } else {
+            exceptionResponse.setServerErrorCode(ErrorCodes.INVALID_SESSION.getCode());
+            exceptionResponse.setServerErrorDescription(ErrorCodes.INVALID_SESSION.getDescription());
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(exceptionResponse);
+    }
 
 }

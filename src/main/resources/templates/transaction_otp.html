@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Transaction OTP</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+<h2>Transaction OTP</h2>
+<p>Hi <strong th:text="${username}"></strong>,</p>
+
+<p>Your OTP for the transaction is:</p>
+
+<h3 style="color: #17a2b8;" th:text="${otp}"></h3>
+
+<p th:if="${transactionDetails}">
+    Transaction Info: <strong th:text="${transactionDetails}"></strong>
+</p>
+
+<p>Use this code to authorize your transaction.</p>
+
+<p>Regards,<br/>Team 1</p>
+</body>
+</html>

@@ -17,12 +17,17 @@ public enum ErrorCodes {
     ACCOUNT_DISABLED(303, HttpStatus.FORBIDDEN, "User account is disabled"),
     BAD_CREDENTIALS(304, HttpStatus.FORBIDDEN, "Login or password is incorrect"),
     ACCOUNT_EXISTS(305, HttpStatus.FORBIDDEN, "Account already exists"),
+    EXPIRED_SESSION(306, HttpStatus.FORBIDDEN, "Expired session. Please try again"),
+    INVALID_SESSION(307, HttpStatus.FORBIDDEN, "Invalid session. Please login again"),
     INSUFFICIENT_FUNDS(400, HttpStatus.BAD_REQUEST, "Insufficient funds in the account"),
     UNAUTHORIZED_ACCESS(401, HttpStatus.UNAUTHORIZED, "Unauthorized access to resource"),
     USER_NOT_FOUND(402, HttpStatus.NOT_FOUND, "User not found"),
     NO_SUCH_REQUEST(404, HttpStatus.NOT_FOUND, "No such request"),
     ACCOUNT_NOT_FOUND(402, HttpStatus.NOT_FOUND, "Account not found"),
     LOAN_PENDING(402, HttpStatus.CONFLICT, "Loan Approver Pending"),
+    MISSING_JWT(403, HttpStatus.FORBIDDEN, "Missing JWT"),
+    NO_TRANSACTION_PASSWORD(403, HttpStatus.FORBIDDEN, "No transaction password"),
+    INVALID_TRANSACTION_PASSWORD(403, HttpStatus.FORBIDDEN, "Invalid transaction password"),
     TRANSACTION_FAILED(403, HttpStatus.INTERNAL_SERVER_ERROR, "Transaction failed due to a system error");
 
 

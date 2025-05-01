@@ -14,7 +14,7 @@ import java.util.Set;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ExceptionResponse {
     private Integer serverErrorCode;
-    private String serverErrorDescrtiption;
+    private String serverErrorDescription;
     private String error;
     private Set<String> validationErrors;
     private Map<String, String> errors;

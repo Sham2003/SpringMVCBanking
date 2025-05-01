@@ -1,9 +1,9 @@
-// src/main/java/com/example/sample/controller/LoanController.java
+
 package com.banking.contoller;
 
 import ai.onnxruntime.OrtException;
 import com.banking.dto.loan.LoanForm;
-import com.banking.model.Loan;
+import com.banking.dto.loan.LoanResponse;
 import com.banking.service.LoanService;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
@@ -32,22 +32,19 @@ public class LoanController {
 
             throw new ValidationException(errors.toString());
         }
-
         String loanId = loanService.processApplication(loanForm);
-
         return ResponseEntity.ok().body(loanId);
     }
 
     @GetMapping("/loans")
-    public ResponseEntity<List<String>> getLoans(@RequestParam String email){
-        List<String> loanIds = loanService.getUserLoans(email);
+    public ResponseEntity<List<LoanResponse>> getLoans(){
+        List<LoanResponse> loanIds = loanService.getUserLoans();
         return ResponseEntity.ok().body(loanIds);
     }
 
     @GetMapping("/loan/{loanId}")
-    public ResponseEntity<Loan> showResult(@PathVariable String loanId) {
-        Loan loan =  loanService.findById(loanId)
-                               .orElseThrow(() -> new IllegalArgumentException("Unknown loanId " + loanId));
+    public ResponseEntity<LoanResponse> showResult(@PathVariable String loanId) {
+        LoanResponse loan = loanService.findById(loanId);
         return ResponseEntity.ok().body(loan);
     }
 }

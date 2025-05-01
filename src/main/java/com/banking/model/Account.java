@@ -3,12 +3,12 @@ package com.banking.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+
+
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "account")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class Account extends BaseAccount {
 
     private String accountNumber;
@@ -18,4 +18,9 @@ public class Account extends BaseAccount {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Override
+    public String toString() {
+        return "Account [accountNumber=" + accountNumber + ", balance=" + balance + ", transactionPassword=" + transactionPassword + ", user=" + user.getId() + "]";
+    }
 }

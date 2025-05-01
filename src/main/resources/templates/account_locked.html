@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Account Locked</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+<h2>Account Locked</h2>
+<p>Hi <strong th:text="${username}"></strong>,</p>
+
+<p>Your account has been temporarily locked.</p>
+
+<p th:if="${reason}">
+    Reason: <strong th:text="${reason}"></strong>
+</p>
+
+<p>Please contact support if you believe this is a mistake.</p>
+
+<p>Thanks,<br/>Team 1</p>
+</body>
+</html>

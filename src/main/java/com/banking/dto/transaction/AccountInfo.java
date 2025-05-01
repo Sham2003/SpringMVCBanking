@@ -16,7 +16,6 @@ public class AccountInfo {
     private LocalDate dob;
     private String accountType;
     private String accountNumber;
-    private String otp;
     private Double balance;
     private LocalDateTime createdOn;
 

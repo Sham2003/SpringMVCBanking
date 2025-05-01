@@ -8,8 +8,6 @@ import lombok.Data;
 @Data
 public class LoanForm {
 
-    @NotBlank
-    private String email;
 
     @Min(0) @Max(10)
     private int noOfDependents;
